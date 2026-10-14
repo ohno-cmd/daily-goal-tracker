@@ -133,16 +133,6 @@ function askHidden(question) {
   });
 }
 
-function ask(question) {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
-
 // ログイン用の名前とパスワードを管理者が決める。
 //   node scripts/db.mjs user <名前> [メール]
 // パスワードは環境変数 LOGIN_PASSWORD か、画面に出ない入力で受け取り、bcryptのハッシュだけをDBに保存する。
