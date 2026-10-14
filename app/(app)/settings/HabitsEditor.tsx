@@ -150,7 +150,7 @@ function NewHabit({ labels, onAdd }: { labels: string[]; onAdd: (h: HabitPatch &
     );
   return (
     <form
-      className="space-y-2 rounded-xl border border-emerald-200 p-3 dark:border-emerald-900"
+      className="space-y-2 rounded-xl border border-purple-200 p-3 dark:border-purple-900"
       onSubmit={async (e) => {
         e.preventDefault();
         if (!f.name.trim()) return;

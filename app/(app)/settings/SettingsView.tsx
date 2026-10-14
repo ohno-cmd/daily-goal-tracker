@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AutoText, Card, Loading, MoveButtons, SectionTitle, btnCls, inputCls } from "@/components/ui";
+import { AutoText, Card, Loading, MoveButtons, SectionTitle, btnCls, inputCls, PageTitle } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { WEEKDAYS, weekday } from "@/lib/dates";
 import { toCsv } from "@/lib/import/csv";
@@ -26,8 +26,8 @@ export function SettingsView() {
   if (status !== "ready") return <Loading error={error} />;
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-xl font-bold">設定</h1>
-      <nav className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-emerald-700 dark:text-emerald-400">
+      <PageTitle emoji="⚙️">設定</PageTitle>
+      <nav className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-purple-700 dark:text-purple-400">
         {[
           ["#habits", "習慣"],
           ["#rewards", "ご褒美ルール"],
@@ -125,7 +125,7 @@ function LoginSettings() {
       <button className={btnCls} onClick={savePassword} disabled={!pw}>
         パスワードを変更
       </button>
-      {msg && <p className={msg.ok ? "text-emerald-700 dark:text-emerald-400" : "text-red-600"}>{msg.text}</p>}
+      {msg && <p className={msg.ok ? "text-purple-700 dark:text-purple-400" : "text-red-600"}>{msg.text}</p>}
     </div>
   );
 }

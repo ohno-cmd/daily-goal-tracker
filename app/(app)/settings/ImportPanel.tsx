@@ -103,7 +103,7 @@ export function ImportPanel() {
       )}
 
       {plan && (
-        <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+        <div className="space-y-2 rounded-xl border border-purple-200 bg-purple-50 p-3 dark:border-purple-900 dark:bg-purple-950/40">
           <div className="font-semibold">取り込む内容</div>
           <p data-testid="import-summary">{summary.length ? summary.join("、") : "取り込める内容がありません"}</p>
           {replaces.length > 0 && <p className="text-xs text-zinc-600 dark:text-zinc-400">今ある{replaces.join("・")}は置き換えます。</p>}
@@ -119,7 +119,7 @@ export function ImportPanel() {
           </button>
         </div>
       )}
-      {done && <p className="text-emerald-700 dark:text-emerald-400">取り込みが終わりました。</p>}
+      {done && <p className="text-purple-700 dark:text-purple-400">取り込みが終わりました。</p>}
       {error && <p className="text-red-600">取り込めませんでした:{error}</p>}
     </div>
   );

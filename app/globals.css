@@ -1,21 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #18181b;
+  --background: #fdf4fa;
+  --foreground: #2e1a3b;
+  --bg-gradient: radial-gradient(1200px 600px at 0% 0%, #fce7f3 0%, transparent 60%),
+    radial-gradient(900px 600px at 100% 10%, #ede9fe 0%, transparent 55%),
+    radial-gradient(800px 500px at 50% 100%, #fae8ff 0%, transparent 60%), #fdf4fa;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b;
-    --foreground: #f4f4f5;
+    --background: #140b1c;
+    --foreground: #f6eefc;
+    --bg-gradient: radial-gradient(1200px 600px at 0% 0%, #2a1030 0%, transparent 60%),
+      radial-gradient(900px 600px at 100% 10%, #1e1438 0%, transparent 55%), #140b1c;
   }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+  --font-sans: var(--font-maru), "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
 }
 
 html {
@@ -23,16 +28,34 @@ html {
 }
 
 body {
-  background: var(--background);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
 }
 
 @keyframes pop {
-  0% { transform: scale(0.6); opacity: 0; }
-  12% { transform: scale(1.08); opacity: 1; }
-  20% { transform: scale(1); }
+  0% { transform: scale(0.6) rotate(-6deg); opacity: 0; }
+  12% { transform: scale(1.08) rotate(2deg); opacity: 1; }
+  20% { transform: scale(1) rotate(0); }
   80% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg) translateY(0); }
+  50% { transform: rotate(3deg) translateY(-6px); }
+}
+
+@keyframes check {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-160px) scale(1.1); opacity: 0; }
 }

@@ -64,7 +64,7 @@ export function ReviewView() {
 function RewardBadge({ status, rewardText }: { status: RewardStatus; rewardText: (s: number | null) => string }) {
   if (status.kind === "cleared")
     return (
-      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+      <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-800 dark:bg-purple-950 dark:text-purple-300">
         🎁 {rewardText(status.step)}
       </span>
     );
@@ -117,7 +117,7 @@ function WeekCard({
         <div className="flex w-full items-center justify-between gap-2">
           <span className="font-bold">
             {formatMd(week.weekStart)} 〜 {formatMd(end)}
-            {current && <span className="ml-2 text-xs font-normal text-emerald-600">今週</span>}
+            {current && <span className="ml-2 text-xs font-normal text-purple-600">今週</span>}
           </span>
           <RewardBadge status={status} rewardText={rewardText} />
         </div>
@@ -147,7 +147,7 @@ function WeekCard({
       {open && (
         <div className="space-y-3 border-t border-zinc-100 p-4 dark:border-zinc-800">
           {status.kind === "cleared" && (
-            <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+            <p className="rounded-xl bg-purple-50 p-3 text-sm text-purple-800 dark:bg-purple-950/50 dark:text-purple-300">
               クリア({status.clearIndex}回目)!今週のご褒美:<b>{rewardText(status.step)}</b>
             </p>
           )}
@@ -188,7 +188,7 @@ function WeekCard({
               >
                 If-Thenを習慣に反映
               </button>
-              {applied && <span className="ml-2 text-emerald-600">反映しました</span>}
+              {applied && <span className="ml-2 text-purple-600">反映しました</span>}
             </div>
           )}
           <AutoText label="来週の大きな石" multiline rows={2} value={review?.next_big_rock ?? ""} onSave={(v) => saveField({ next_big_rock: v })} />

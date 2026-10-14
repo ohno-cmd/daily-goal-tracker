@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { RateBars, RateLineChart, SleepChart } from "@/components/charts";
-import { Card, Loading, SectionTitle, Stat, btnCls, yen } from "@/components/ui";
+import { Card, Loading, SectionTitle, Stat, btnCls, yen, PageTitle } from "@/components/ui";
 import { addDays, daysBetween, monthStartOf } from "@/lib/dates";
 import { useRows } from "@/lib/rows";
 import {
@@ -62,16 +62,16 @@ export function DashboardView() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">ダッシュボード</h1>
+      <PageTitle emoji="📊">ダッシュボード</PageTitle>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-        <Stat label="経過日数" value={`${daysBetween(start, today) + 1}日`} sub={`${start.replaceAll("-", "/")} から`} />
-        <Stat label="全体の平均達成率" value={percent(averageRate(days, today))} />
-        <Stat label="A全達成の日数" value={`${days.filter((d) => d.allA).length}日`} />
-        <Stat label="現在の連続日数" value={`${streak}日`} />
-        <Stat label="最長連続日数" value={`${longestStreak(days)}日`} />
-        <Stat label="平均起床時刻" value={minutesToTime(avgWake)} />
-        <Stat label="平均就寝時刻" value={minutesToTime(avgSleep)} sub="0時以降は24時台で計算" />
-        <Stat label="今月の売上" value={actual == null ? "未入力" : percent(actual / target)} sub={`実績 ${yen(actual)} / 目標 ${yen(target)}`} />
+        <Stat emoji="📆" label="経過日数" value={`${daysBetween(start, today) + 1}日`} sub={`${start.replaceAll("-", "/")} から`} />
+        <Stat emoji="📈" label="全体の平均達成率" value={percent(averageRate(days, today))} />
+        <Stat emoji="◎" label="A全達成の日数" value={`${days.filter((d) => d.allA).length}日`} />
+        <Stat emoji="🔥" label="現在の連続日数" value={`${streak}日`} />
+        <Stat emoji="🏆" label="最長連続日数" value={`${longestStreak(days)}日`} />
+        <Stat emoji="☀️" label="平均起床時刻" value={minutesToTime(avgWake)} />
+        <Stat emoji="🌙" label="平均就寝時刻" value={minutesToTime(avgSleep)} sub="0時以降は24時台で計算" />
+        <Stat emoji="💰" label="今月の売上" value={actual == null ? "未入力" : percent(actual / target)} sub={`実績 ${yen(actual)} / 目標 ${yen(target)}`} />
       </div>
 
       <div className="flex gap-1">
@@ -79,7 +79,7 @@ export function DashboardView() {
           <button
             key={x.key}
             onClick={() => setPeriod(x.key)}
-            className={`${btnCls} ${period === x.key ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : ""}`}
+            className={`${btnCls} ${period === x.key ? "border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300" : ""}`}
           >
             {x.label}
           </button>

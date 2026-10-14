@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AutoText, Card, Loading, MoveButtons, btnCls, primaryBtnCls } from "@/components/ui";
+import { AutoText, Card, Loading, MoveButtons, btnCls, primaryBtnCls, PageTitle } from "@/components/ui";
 import { useRows } from "@/lib/rows";
 import { useData, useScores } from "@/lib/store";
 import type { TextItem } from "@/lib/types";
@@ -17,7 +17,7 @@ export function AffirmationView() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-bold">アファメーション</h1>
+        <PageTitle emoji="💖">アファメーション</PageTitle>
         <div className="flex gap-2">
           <button className={btnCls} onClick={() => setEditing(!editing)}>
             {editing ? "編集を終える" : "編集"}
@@ -48,7 +48,7 @@ export function AffirmationView() {
       ) : lines.length ? (
         <ol className="space-y-3">
           {lines.map((r) => (
-            <li key={r.id} className="rounded-2xl bg-emerald-50 px-5 py-4 text-xl font-semibold leading-relaxed whitespace-pre-wrap dark:bg-emerald-950/40">
+            <li key={r.id} className="rounded-2xl bg-purple-50 px-5 py-4 text-xl font-semibold leading-relaxed whitespace-pre-wrap dark:bg-purple-950/40">
               {r.text}
             </li>
           ))}
@@ -95,7 +95,7 @@ function Reader({ lines, onClose }: { lines: string[]; onClose: () => void }) {
                   付けない
                 </button>
                 <button
-                  className="min-h-12 rounded-xl bg-emerald-600 px-5 font-semibold"
+                  className="min-h-12 rounded-xl bg-purple-600 px-5 font-semibold"
                   onClick={async () => {
                     await toggleCheck(today, habit.id, true);
                     setDone(true);
@@ -106,7 +106,7 @@ function Reader({ lines, onClose }: { lines: string[]; onClose: () => void }) {
               </div>
             </>
           )}
-          {(done || already) && <p className="text-emerald-400">✓ 今日の「{habit?.name}」は付いています</p>}
+          {(done || already) && <p className="text-purple-400">✓ 今日の「{habit?.name}」は付いています</p>}
           <button className="min-h-12 rounded-xl border border-zinc-600 px-5" onClick={() => setI(0)}>
             もう一度読む
           </button>

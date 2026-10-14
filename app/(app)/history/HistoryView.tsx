@@ -33,7 +33,7 @@ export function HistoryView() {
           <button
             key={m}
             onClick={() => setMode(m)}
-            className={`${btnCls} ${mode === m ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : ""}`}
+            className={`${btnCls} ${mode === m ? "border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300" : ""}`}
           >
             {label}
           </button>
@@ -104,7 +104,7 @@ function MonthGrid({ month }: { month: DateStr }) {
               href={d === today ? "/" : `/?d=${d}`}
               data-date={d}
               className={`relative flex aspect-square min-h-11 flex-col items-center justify-center rounded-lg text-sm ${inMonth ? "" : "opacity-30"} ${
-                d === today ? "ring-2 ring-emerald-500" : ""
+                d === today ? "ring-2 ring-purple-500" : ""
               } ${scored ? "text-zinc-900" : "bg-zinc-50 text-zinc-400 dark:bg-zinc-900"}`}
               style={scored ? { backgroundColor: rateColor(r.rate) } : undefined}
               title={scored ? `${formatMd(d)} ${r.score}/${r.max} ${percent(r.rate)}` : formatMd(d)}
@@ -174,7 +174,7 @@ function HabitTable({ from, to }: { from: DateStr; to: DateStr }) {
                           aria-label={`${formatMd(d)} ${h.name}`}
                           disabled={disabled}
                           onClick={() => toggleCheck(d, h.id, !on)}
-                          className={`h-9 w-full ${dense ? "min-w-7" : "min-w-11"} ${disabled ? "bg-zinc-50 dark:bg-zinc-900/40" : "hover:bg-emerald-50 dark:hover:bg-emerald-950"} ${on ? "font-bold text-emerald-600" : "text-zinc-300"}`}
+                          className={`h-9 w-full ${dense ? "min-w-7" : "min-w-11"} ${disabled ? "bg-zinc-50 dark:bg-zinc-900/40" : "hover:bg-purple-50 dark:hover:bg-purple-950"} ${on ? "font-bold text-purple-600" : "text-zinc-300"}`}
                         >
                           {on ? "✓" : disabled ? "" : "·"}
                         </button>

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { passwordLogin, sendCode, verifyCode, type LoginState, type PasswordState } from "./actions";
 
 const input =
-  "w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base outline-none focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900";
+  "w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base outline-none focus:border-purple-500 dark:border-zinc-700 dark:bg-zinc-900";
 const button =
   "flex min-h-11 w-full items-center justify-center rounded-xl px-4 py-3 font-semibold disabled:opacity-50";
 
@@ -35,7 +35,7 @@ function PasswordForm({ initialError }: { initialError?: string }) {
         パスワード
       </label>
       <input id="password" name="password" type="password" autoComplete="current-password" required className={input} />
-      <button disabled={pending} className={`${button} bg-emerald-600 text-white`}>
+      <button disabled={pending} className={`${button} bg-purple-600 text-white`}>
         {pending ? "確認中…" : "ログイン"}
       </button>
       {state.error && (
@@ -61,7 +61,7 @@ function EmailCodeForm({ googleEnabled, initialError }: { googleEnabled: boolean
             メールアドレス
           </label>
           <input id="email" name="email" type="email" autoComplete="email" required defaultValue={sent.email} className={input} />
-          <button disabled={sending} className={`${button} bg-emerald-600 text-white`}>
+          <button disabled={sending} className={`${button} bg-purple-600 text-white`}>
             {sending ? "送信中…" : "ログイン用のメールを送る"}
           </button>
         </form>
@@ -80,7 +80,7 @@ function EmailCodeForm({ googleEnabled, initialError }: { googleEnabled: boolean
             required
             className={`${input} text-center text-2xl tracking-[0.4em]`}
           />
-          <button disabled={verifying} className={`${button} bg-emerald-600 text-white`}>
+          <button disabled={verifying} className={`${button} bg-purple-600 text-white`}>
             {verifying ? "確認中…" : "ログイン"}
           </button>
           <button type="button" onClick={() => location.reload()} className="w-full text-sm text-zinc-500 underline">
@@ -89,7 +89,7 @@ function EmailCodeForm({ googleEnabled, initialError }: { googleEnabled: boolean
         </form>
       )}
 
-      {state.info && <p className="text-sm text-emerald-700 dark:text-emerald-400">{state.info}</p>}
+      {state.info && <p className="text-sm text-purple-700 dark:text-purple-400">{state.info}</p>}
       {state.error && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           {state.error}
