@@ -19,6 +19,7 @@ npm run db:seed -- <メール>   # 初回ログイン後、そのユーザーに
 | `npm test` | `lib/scoring.ts`(点数・連続日数・ご褒美・売上)とインポートの単体テスト |
 | `npm run db:migrate` | `supabase/migrations` の未適用SQLを流す(`DATABASE_URL` を使う) |
 | `npm run db:seed -- <メール>` | 習慣リスト(SPEC 6.2)を入れる。習慣が既にあれば何もしない |
+| `npm run user -- <名前> [メール]` | ログイン用の名前とパスワードを決める。メールを付けると新しい人を作る |
 | `npm run db:test-user` | 開発用テストユーザー(`DEV_TEST_EMAIL`)を作る。`npm run dev` のときだけログイン画面にボタンが出る |
 | `node scripts/make-icons.mjs` | PWAのアイコンを作り直す |
 
@@ -39,6 +40,15 @@ SPECからの追加:`habits.active_from`(満点に数え始める日)。イン�
 
 公開後、Supabase の Authentication → URL Configuration で Site URL を本番URLにし、Redirect URLs に `https://<本番URL>/**` を足す。
 
-## 人を追加する(将来)
+## ログインと人の追加
 
-今は `ALLOWED_EMAILS` にメールを足し(Vercelの環境変数も)、その人が一度ログインしてから `npm run db:seed -- <メール>` で習慣を入れる。設定画面からの招待と初回セットアップはSPEC 1.1のとおり未実装。
+ログインは「名前とパスワード」。名前とパスワードは管理者が決めて、使う人に伝える(本人は設定 → アカウントで変更できる)。パスワードを忘れたときは、ログイン画面の下からメールのコードでも入れる。
+
+```bash
+# 既にいる人の名前・パスワードを決め直す(パスワードは画面に出ない入力で聞かれる)
+node --env-file=.env.local scripts/db.mjs user <名前>
+# 新しい人を作る(習慣リストも入る)
+node --env-file=.env.local scripts/db.mjs user <名前> <メール>
+```
+
+新しい人は、メールを `ALLOWED_EMAILS`(`.env.local` と Vercel の環境変数)にも足すとログインできる。Vercelは環境変数を変えたら Redeploy する。
