@@ -36,3 +36,13 @@ export async function verifyCode(_prev: LoginState, form: FormData): Promise<Log
   if (error) return { step: "code", email, error: "コードが違うか、期限が切れています。" };
   redirect("/");
 }
+
+/** 開発用テストユーザーでログインする(npm run dev のときだけ) */
+export async function devLogin(): Promise<void> {
+  const email = process.env.DEV_TEST_EMAIL;
+  const password = process.env.DEV_TEST_PASSWORD;
+  if (process.env.NODE_ENV !== "development" || !email || !password || !isAllowedEmail(email)) redirect("/login");
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  redirect(error ? "/login?error=callback" : "/");
+}

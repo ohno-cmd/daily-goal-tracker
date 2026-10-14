@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { supabaseConfigured } from "@/lib/supabase/env";
+import { devLogin } from "./actions";
 import { LoginForm } from "./LoginForm";
 
 const ERRORS: Record<string, string> = {
@@ -21,6 +22,13 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
           Supabaseの接続情報が未設定です。.env.local に NEXT_PUBLIC_SUPABASE_URL と NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
           を入れて、開発サーバーを再起動してください。
         </p>
+      )}
+      {process.env.NODE_ENV === "development" && process.env.DEV_TEST_EMAIL && (
+        <form action={devLogin} className="mt-10 border-t border-dashed border-zinc-300 pt-4 dark:border-zinc-700">
+          <button className="min-h-11 w-full rounded-xl text-sm text-zinc-500 underline">
+            開発用:テストユーザー({process.env.DEV_TEST_EMAIL})でログイン
+          </button>
+        </form>
       )}
     </main>
   );

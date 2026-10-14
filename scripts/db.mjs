@@ -72,13 +72,52 @@ async function seed(db, email) {
   console.log(`${email} に習慣を${habits.length}件入れました。`);
 }
 
+// 開発用のテストユーザー(DEV_TEST_EMAIL / DEV_TEST_PASSWORD)を作り、習慣を入れる。
+// 本人のデータを触らずに画面を確かめるためと、RLSで本人のデータが見えないことの確認に使う
+async function testUser(db) {
+  const email = (process.env.DEV_TEST_EMAIL || "").trim().toLowerCase();
+  const password = process.env.DEV_TEST_PASSWORD || "";
+  if (!email || password.length < 12) {
+    console.error("DEV_TEST_EMAIL と DEV_TEST_PASSWORD(12文字以上)を .env.local に入れてください。");
+    process.exit(1);
+  }
+  const found = (await db.query("select id from auth.users where lower(email) = $1", [email])).rows[0];
+  if (found) {
+    await db.query("update auth.users set encrypted_password = extensions.crypt($2, extensions.gen_salt('bf')) where id = $1", [found.id, password]);
+    console.log(`${email} は作成済みです(パスワードを .env.local の値に合わせました)。`);
+  } else {
+    await db.query("begin");
+    const id = (
+      await db.query(
+        `insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+           raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+           confirmation_token, recovery_token, email_change, email_change_token_new, email_change_token_current, reauthentication_token)
+         values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', $1,
+           extensions.crypt($2, extensions.gen_salt('bf')), now(),
+           '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '', '', '')
+         returning id`,
+        [email, password],
+      )
+    ).rows[0].id;
+    await db.query(
+      `insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+       values ($1::text, $1::uuid, jsonb_build_object('sub', $1::text, 'email', $2::text, 'email_verified', true), 'email', now(), now(), now())`,
+      [id, email],
+    );
+    await db.query("commit");
+    console.log(`${email} を作りました。`);
+  }
+  await seed(db, email);
+}
+
 const [cmd, arg] = process.argv.slice(2);
 const db = connect();
 await db.connect();
 try {
   if (cmd === "migrate") await migrate(db);
   else if (cmd === "seed") await seed(db, arg);
-  else console.error("使い方: node scripts/db.mjs migrate | seed [メール]");
+  else if (cmd === "test-user") await testUser(db);
+  else console.error("使い方: node scripts/db.mjs migrate | seed [メール] | test-user");
 } finally {
   await db.end();
 }
