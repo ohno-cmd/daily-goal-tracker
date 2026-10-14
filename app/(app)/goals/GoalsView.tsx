@@ -68,7 +68,7 @@ function Hierarchy({ pillars }: { pillars: Pillar[] }) {
           <p className="text-sm">
             {active.length}個(A {active.filter((h) => h.priority === "A").length}・B {active.filter((h) => h.priority === "B").length}・C{" "}
             {active.filter((h) => h.priority === "C").length})
-            <Link href="/" className="ml-2 text-purple-600 underline">
+            <Link href="/today" className="ml-2 text-purple-600 underline">
               今日の✓へ
             </Link>
           </p>,

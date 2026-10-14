@@ -13,11 +13,12 @@ const svg = (d: React.ReactNode) => (
 );
 
 const ITEMS: Item[] = [
-  { href: "/", label: "今日", mobile: true, icon: svg(<><rect x="3" y="4" width="18" height="17" rx="3" /><path d="M3 9h18M8 2v4M16 2v4M8.5 14.5l2.5 2.5 4.5-5" /></>) },
+  { href: "/", label: "ホーム", mobile: true, icon: svg(<><path d="M3 11.5 12 4l9 7.5" /><path d="M5.5 10v9.5a1 1 0 0 0 1 1H10v-5h4v5h3.5a1 1 0 0 0 1-1V10" /></>) },
+  { href: "/today", label: "今日", mobile: true, icon: svg(<><rect x="3" y="4" width="18" height="17" rx="3" /><path d="M3 9h18M8 2v4M16 2v4M8.5 14.5l2.5 2.5 4.5-5" /></>) },
   { href: "/history", label: "カレンダー", mobile: false, icon: svg(<><rect x="3" y="4" width="18" height="17" rx="3" /><path d="M3 9h18M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01" /></>) },
   { href: "/goals", label: "目標", mobile: true, icon: svg(<><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" /></>) },
   { href: "/pillars", label: "5つの柱", mobile: false, icon: svg(<><path d="M3 21h18M5 21V9M9.5 21V9M14.5 21V9M19 21V9M2 9l10-6 10 6Z" /></>) },
-  { href: "/dashboard", label: "ダッシュボード", mobile: true, icon: svg(<><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></>) },
+  { href: "/dashboard", label: "ダッシュボード", mobile: false, icon: svg(<><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></>) },
   { href: "/review", label: "振り返り", mobile: true, icon: svg(<><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5M12 7v5l3 2" /></>) },
   { href: "/affirmation", label: "アファメーション", mobile: false, icon: svg(<><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" /></>) },
   { href: "/settings", label: "設定", mobile: true, icon: svg(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></>) },
@@ -27,7 +28,7 @@ function isActive(path: string, href: string, mobile = false) {
   if (href === "/") return path === "/";
   // スマホでは「目標」タブの中に5つの柱がある
   if (mobile && href === "/goals") return path.startsWith("/goals") || path.startsWith("/pillars");
-  if (href === "/review") return path.startsWith("/review") || path.startsWith("/history");
+  if (href === "/review") return path.startsWith("/review") || path.startsWith("/history") || (mobile && path.startsWith("/dashboard"));
   return path.startsWith(href);
 }
 
@@ -82,7 +83,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <GoalLine />
+        {/* ホームには目標のカードがあるので出さない */}
+        {path !== "/" && <GoalLine />}
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-28 pt-4 md:pb-10">{children}</main>
       </div>
 

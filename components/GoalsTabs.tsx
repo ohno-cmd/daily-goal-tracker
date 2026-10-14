@@ -15,7 +15,7 @@ export function GoalsTabs() {
 
 export function Tabs({ tabs, path }: { tabs: { href: string; label: string }[]; path: string }) {
   return (
-    <div className="grid grid-cols-2 gap-1 rounded-2xl border border-pink-100 bg-white/60 p-1 text-sm backdrop-blur dark:border-purple-950 dark:bg-zinc-900/60">
+    <div className={`grid ${tabs.length === 3 ? "grid-cols-3" : "grid-cols-2"} gap-1 rounded-2xl border border-pink-100 bg-white/60 p-1 text-sm backdrop-blur dark:border-purple-950 dark:bg-zinc-900/60`}>
       {tabs.map((t) => (
         <Link
           key={t.href}

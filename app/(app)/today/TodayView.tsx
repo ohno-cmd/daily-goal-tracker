@@ -19,7 +19,7 @@ export function TodayView() {
 
   if (data.status !== "ready") return <Loading error={data.error} />;
 
-  const go = (d: DateStr) => router.push(d === scores.today ? "/" : `/?d=${d}`);
+  const go = (d: DateStr) => router.push(d === scores.today ? "/today" : `/today?d=${d}`);
   return <Day key={date} date={date} go={go} />;
 }
 

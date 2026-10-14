@@ -101,7 +101,7 @@ function MonthGrid({ month }: { month: DateStr }) {
           return (
             <Link
               key={d}
-              href={d === today ? "/" : `/?d=${d}`}
+              href={d === today ? "/today" : `/today?d=${d}`}
               data-date={d}
               className={`relative flex aspect-square min-h-11 flex-col items-center justify-center rounded-lg text-sm ${inMonth ? "" : "opacity-30"} ${
                 d === today ? "ring-2 ring-purple-500" : ""
@@ -141,7 +141,7 @@ function HabitTable({ from, to }: { from: DateStr; to: DateStr }) {
             <th className="sticky left-0 z-10 bg-white px-3 py-2 text-left font-medium dark:bg-zinc-900">習慣</th>
             {dates.map((d) => (
               <th key={d} className={`px-0.5 py-2 text-center font-normal ${weekday(d) === 0 ? "text-rose-500" : weekday(d) === 6 ? "text-sky-600" : "text-zinc-500"}`}>
-                <Link href={d === today ? "/" : `/?d=${d}`} className="block text-xs leading-tight hover:underline">
+                <Link href={d === today ? "/today" : `/today?d=${d}`} className="block text-xs leading-tight hover:underline">
                   {dense ? Number(d.slice(8)) : formatMd(d, false)}
                   <br />
                   {WEEKDAYS[weekday(d)]}

@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { Loading } from "@/components/ui";
-import { TodayView } from "./TodayView";
+import { HomeView } from "./HomeView";
 
-export default function TodayPage() {
+export default function HomePage() {
   return (
     <Suspense fallback={<Loading />}>
-      <TodayView />
+      <HomeView />
     </Suspense>
   );
 }

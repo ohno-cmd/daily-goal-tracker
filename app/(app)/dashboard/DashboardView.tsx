@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { RateBars, RateLineChart, SleepChart } from "@/components/charts";
+import { ReviewTabs } from "@/components/ReviewTabs";
 import { Card, Loading, SectionTitle, Stat, btnCls, yen, PageTitle } from "@/components/ui";
 import { addDays, daysBetween, monthStartOf } from "@/lib/dates";
 import { useRows } from "@/lib/rows";
@@ -62,6 +63,7 @@ export function DashboardView() {
 
   return (
     <div className="space-y-4">
+      <ReviewTabs />
       <PageTitle emoji="📊">ダッシュボード</PageTitle>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
         <Stat emoji="📆" label="経過日数" value={`${daysBetween(start, today) + 1}日`} sub={`${start.replaceAll("-", "/")} から`} />
