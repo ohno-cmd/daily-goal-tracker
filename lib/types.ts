@@ -17,6 +17,8 @@ interface Row {
 
 export interface Profile extends Row {
   display_name: string;
+  /** ログイン用の名前 */
+  username: string | null;
   final_goal: string;
   mid_goal: string;
   three_month_note: string;

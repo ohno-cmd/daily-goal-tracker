@@ -1,8 +1,9 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import { AutoText, Card, Loading, MoveButtons, SectionTitle, btnCls } from "@/components/ui";
+import { useEffect, useState } from "react";
+import { AutoText, Card, Loading, MoveButtons, SectionTitle, btnCls, inputCls } from "@/components/ui";
+import { createClient } from "@/lib/supabase/client";
 import { WEEKDAYS, weekday } from "@/lib/dates";
 import { toCsv } from "@/lib/import/csv";
 import { useRows } from "@/lib/rows";
@@ -67,13 +68,64 @@ export function SettingsView() {
       </Card>
       <Card>
         <SectionTitle>アカウント</SectionTitle>
-        <div className="flex items-center justify-between gap-2 text-sm">
+        <LoginSettings />
+        <div className="mt-4 flex items-center justify-between gap-2 text-sm">
           <span className="truncate text-zinc-500">{email}</span>
           <form action="/auth/signout" method="post">
             <button className={btnCls}>ログアウト</button>
           </form>
         </div>
       </Card>
+    </div>
+  );
+}
+
+/** ログイン用の名前とパスワード */
+function LoginSettings() {
+  const { profile, saveProfile } = useData();
+  const [name, setName] = useState(profile?.username ?? "");
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+
+  async function saveName() {
+    const v = name.trim();
+    if (!/^[^\s@]{2,30}$/.test(v)) return setMsg({ ok: false, text: "名前は空白と@を使わず、2〜30文字にしてください。" });
+    const { error } = await createClient().from("profiles").update({ username: v }).eq("id", profile!.id);
+    if (error) return setMsg({ ok: false, text: error.code === "23505" ? "その名前は使われています。" : "保存できませんでした。" });
+    await saveProfile({ username: v });
+    setMsg({ ok: true, text: "名前を保存しました。" });
+  }
+
+  async function savePassword() {
+    if (pw.length < 8) return setMsg({ ok: false, text: "パスワードは8文字以上にしてください。" });
+    if (pw !== pw2) return setMsg({ ok: false, text: "確認用のパスワードが一致しません。" });
+    const { error } = await createClient().auth.updateUser({ password: pw });
+    if (error) return setMsg({ ok: false, text: `変更できませんでした:${error.message}` });
+    setPw("");
+    setPw2("");
+    setMsg({ ok: true, text: "パスワードを変更しました。次からこのパスワードでログインします。" });
+  }
+
+  return (
+    <div className="space-y-3 text-sm">
+      <div className="flex items-end gap-2">
+        <label className="block flex-1">
+          <span className="mb-1 block text-zinc-600 dark:text-zinc-400">ログイン用の名前</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="username" autoCapitalize="none" className={inputCls} />
+        </label>
+        <button className={btnCls} onClick={saveName}>
+          保存
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <input type="password" placeholder="新しいパスワード" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" className={inputCls} />
+        <input type="password" placeholder="もう一度" value={pw2} onChange={(e) => setPw2(e.target.value)} autoComplete="new-password" className={inputCls} />
+      </div>
+      <button className={btnCls} onClick={savePassword} disabled={!pw}>
+        パスワードを変更
+      </button>
+      {msg && <p className={msg.ok ? "text-emerald-700 dark:text-emerald-400" : "text-red-600"}>{msg.text}</p>}
     </div>
   );
 }

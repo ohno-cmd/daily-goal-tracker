@@ -43,6 +43,24 @@ export async function verifyCode(_prev: LoginState, form: FormData): Promise<Log
   redirect("/");
 }
 
+export type PasswordState = { name: string; error?: string };
+
+const WRONG = "名前かパスワードが違います。";
+
+/** 名前とパスワードでログインする。名前から本人のメールを引き、そのメールとパスワードで認証する */
+export async function passwordLogin(_prev: PasswordState, form: FormData): Promise<PasswordState> {
+  const name = String(form.get("name") ?? "").trim();
+  const password = String(form.get("password") ?? "");
+  if (!name || !password) return { name, error: "名前とパスワードを入力してください。" };
+
+  const supabase = await createClient();
+  const { data: email } = await supabase.rpc("email_for_login", { p_username: name });
+  if (typeof email !== "string" || !isAllowedEmail(email)) return { name, error: WRONG };
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return { name, error: /rate limit/i.test(error.message) ? "試行回数が多すぎます。少し待ってからお試しください。" : WRONG };
+  redirect("/");
+}
+
 /** 開発用テストユーザーでログインする(npm run dev のときだけ) */
 export async function devLogin(): Promise<void> {
   const email = process.env.DEV_TEST_EMAIL;

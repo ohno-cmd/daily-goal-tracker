@@ -1,8 +1,10 @@
 // データベースの管理用。.env.local の DATABASE_URL(Supabase の Session pooler 接続文字列)を使う。
 //   npm run db:migrate          supabase/migrations の未適用のSQLを順に流す
 //   npm run db:seed -- <メール>  そのユーザーに習慣リスト(SPEC 6.2)を入れる。省略時は ALLOWED_EMAILS の1件目
+//   npm run set-login            ログイン用の名前とパスワードを決める(入力は画面に出ない)
 import fs from "node:fs";
 import path from "node:path";
+import readline from "node:readline";
 import pg from "pg";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -110,6 +112,68 @@ async function testUser(db) {
   await seed(db, email);
 }
 
+/** 入力を画面に出さずに1行読む(パスワード用) */
+function askHidden(question) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+    rl._writeToOutput = (s) => {
+      if (s.includes(question)) process.stdout.write(s);
+    };
+    rl.question(question, (answer) => {
+      rl.close();
+      process.stdout.write("\n");
+      resolve(answer);
+    });
+  });
+}
+
+function ask(question) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+// ログイン用の名前とパスワードを決める(メールが送れないときの最初の設定用)。
+// パスワードはこの端末で入力し、bcryptのハッシュだけをDBに保存する
+async function setLogin(db, email) {
+  email = (email || (process.env.ALLOWED_EMAILS || "").split(",")[0] || "").trim().toLowerCase();
+  const user = (await db.query("select id from auth.users where lower(email) = $1", [email])).rows[0];
+  if (!user) {
+    console.error(`${email} のユーザーが見つかりません。`);
+    process.exit(1);
+  }
+  console.log(`${email} のログイン用の名前とパスワードを決めます。`);
+  const name = await ask("名前(2〜30文字、空白と@は使えません):");
+  if (!/^[^\s@]{2,30}$/.test(name)) {
+    console.error("名前の形が正しくありません。");
+    process.exit(1);
+  }
+  const taken = (await db.query("select 1 from public.profiles where lower(username) = lower($1) and user_id <> $2", [name, user.id])).rows[0];
+  if (taken) {
+    console.error("その名前は使われています。");
+    process.exit(1);
+  }
+  const pw = await askHidden("パスワード(8文字以上。入力しても表示されません):");
+  if (pw.length < 8) {
+    console.error("8文字以上にしてください。");
+    process.exit(1);
+  }
+  if ((await askHidden("もう一度パスワード:")) !== pw) {
+    console.error("一致しませんでした。もう一度最初からやり直してください。");
+    process.exit(1);
+  }
+  await db.query("begin");
+  await db.query("insert into public.profiles (user_id) values ($1) on conflict (user_id) do nothing", [user.id]);
+  await db.query("update public.profiles set username = $2 where user_id = $1", [user.id, name]);
+  await db.query("update auth.users set encrypted_password = extensions.crypt($2, extensions.gen_salt('bf')) where id = $1", [user.id, pw]);
+  await db.query("commit");
+  console.log(`設定しました。名前「${name}」とパスワードでログインできます。`);
+}
+
 const [cmd, arg] = process.argv.slice(2);
 const db = connect();
 await db.connect();
@@ -117,7 +181,8 @@ try {
   if (cmd === "migrate") await migrate(db);
   else if (cmd === "seed") await seed(db, arg);
   else if (cmd === "test-user") await testUser(db);
-  else console.error("使い方: node scripts/db.mjs migrate | seed [メール] | test-user");
+  else if (cmd === "set-login") await setLogin(db, arg);
+  else console.error("使い方: node scripts/db.mjs migrate | seed [メール] | test-user | set-login [メール]");
 } finally {
   await db.end();
 }

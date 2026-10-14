@@ -12,7 +12,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">日別目標トラッカー</h1>
-      <p className="mb-8 text-sm text-zinc-500">登録済みのメールアドレスでログインします。</p>
+      <p className="mb-8 text-sm text-zinc-500">自分で決めた名前とパスワードでログインします。</p>
       {supabaseConfigured ? (
         <Suspense>
           <Form searchParams={searchParams} />
