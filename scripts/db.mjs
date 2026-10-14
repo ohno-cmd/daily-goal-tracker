@@ -189,6 +189,28 @@ async function setUser(db, name, email, { empty = false } = {}) {
   console.log(`設定しました:名前「${name}」(${user.email})`);
 }
 
+// 2人をパートナーにする(お互いの「今日」を見られる)。--remove で解除
+//   node scripts/db.mjs partner <名前1> <名前2> [--remove]
+async function setPartner(db, a, b, { remove = false } = {}) {
+  const idOf = async (name) => {
+    const row = (await db.query("select user_id from public.profiles where lower(username) = lower($1)", [name || ""])).rows[0];
+    if (!row) {
+      console.error(`名前「${name}」の人が見つかりません。`);
+      process.exit(1);
+    }
+    return row.user_id;
+  };
+  const x = await idOf(a);
+  const y = await idOf(b);
+  if (remove) {
+    await db.query("delete from public.partners where (user_id = $1 and partner_id = $2) or (user_id = $2 and partner_id = $1)", [x, y]);
+    console.log(`「${a}」と「${b}」のパートナーを解除しました。`);
+    return;
+  }
+  await db.query("insert into public.partners (user_id, partner_id) values ($1, $2), ($2, $1) on conflict do nothing", [x, y]);
+  console.log(`「${a}」と「${b}」をパートナーにしました(お互いの「今日」を見られます)。`);
+}
+
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((a) => a.startsWith("--")));
 const [cmd, arg, arg2] = args.filter((a) => !a.startsWith("--"));
@@ -199,7 +221,8 @@ try {
   else if (cmd === "seed") await seed(db, arg);
   else if (cmd === "test-user") await testUser(db);
   else if (cmd === "user") await setUser(db, arg, arg2, { empty: flags.has("--empty") });
-  else console.error("使い方: node scripts/db.mjs migrate | seed [メール] | test-user | user <名前> [メール] [--empty]");
+  else if (cmd === "partner") await setPartner(db, arg, arg2, { remove: flags.has("--remove") });
+  else console.error("使い方: node scripts/db.mjs migrate | seed [メール] | test-user | user <名前> [メール] [--empty] | partner <名前1> <名前2> [--remove]");
 } finally {
   await db.end();
 }

@@ -2,32 +2,99 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AutoText, Card, Loading, PencilButton, PriorityBadge, btnCls, inputCls, primaryBtnCls } from "@/components/ui";
 import { addDays, formatMd, isDateStr, nowTimeInTokyo, type DateStr } from "@/lib/dates";
 import { needsMoodBoost, percent, priorityOn, isActiveOn } from "@/lib/scoring";
-import { useData, useScores } from "@/lib/store";
-import { TIME_SLOTS, type Habit } from "@/lib/types";
+import { usePartner, usePartnerData, type PartnerInfo } from "@/lib/partner";
+import { computeScores, useData, useScores, useToday, type Scores } from "@/lib/store";
+import { TIME_SLOTS, type DailyEntry, type EntryFields, type Habit } from "@/lib/types";
 
 export function TodayView() {
   const data = useData();
-  const scores = useScores();
+  const today = useToday();
   const params = useSearchParams();
   const router = useRouter();
+  const { partner } = usePartner();
   const q = params.get("d");
-  const date: DateStr = q && isDateStr(q) ? q : scores.today;
+  const date: DateStr = q && isDateStr(q) ? q : today;
+  const showPartner = params.get("who") === "partner" && !!partner;
 
   if (data.status !== "ready") return <Loading error={data.error} />;
 
-  const go = (d: DateStr) => router.push(d === scores.today ? "/today" : `/today?d=${d}`);
-  return <Day key={date} date={date} go={go} />;
+  const url = (d: DateStr, partnerView: boolean) => {
+    const sp = new URLSearchParams();
+    if (partnerView) sp.set("who", "partner");
+    if (d !== today) sp.set("d", d);
+    const s = sp.toString();
+    return s ? `/today?${s}` : "/today";
+  };
+  const go = (d: DateStr) => router.push(url(d, showPartner));
+  const tabs: [boolean, string][] = partner
+    ? [
+        [false, "🙋 わたし"],
+        [true, `💕 ${partner.name}`],
+      ]
+    : [];
+  return (
+    <div className="mx-auto max-w-xl space-y-4">
+      {partner && (
+        <div className="grid grid-cols-2 gap-1 rounded-2xl border border-pink-100 bg-white/60 p-1 text-sm backdrop-blur dark:border-purple-950 dark:bg-zinc-900/60">
+          {tabs.map(([p, label]) => (
+            <Link
+              key={String(p)}
+              href={url(date, p)}
+              className={`flex min-h-10 items-center justify-center rounded-xl transition ${
+                showPartner === p ? "bg-gradient-to-r from-pink-400 to-purple-500 font-bold text-white shadow-sm" : "text-purple-900/60 dark:text-purple-200/60"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+      )}
+      {showPartner ? <PartnerDay key={`p-${date}`} partner={partner!} date={date} go={go} /> : <OwnDay key={date} date={date} go={go} />}
+    </div>
+  );
+}
+
+/** Day に渡すもの。自分の分は書ける、パートナーの分は読むだけ */
+interface DaySource extends Scores {
+  habits: Habit[];
+  checks: Map<DateStr, Set<string>>;
+  entries: Map<DateStr, DailyEntry>;
+  readOnly: boolean;
+  /** パートナーの名前(パートナーの分を見ているとき) */
+  name?: string;
+  toggleCheck: (date: DateStr, habitId: string, on: boolean) => void;
+  saveEntry: (date: DateStr, patch: Partial<EntryFields>) => Promise<boolean>;
+}
+
+function OwnDay({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
+  const { habits, checks, entries, toggleCheck, saveEntry } = useData();
+  const scores = useScores();
+  return <Day date={date} go={go} src={{ ...scores, habits, checks, entries, toggleCheck, saveEntry, readOnly: false }} />;
+}
+
+function PartnerDay({ partner, date, go }: { partner: PartnerInfo; date: DateStr; go: (d: DateStr) => void }) {
+  const p = usePartnerData(partner.id);
+  const today = useToday();
+  const scores = useMemo(() => computeScores(p.habits, p.versions, p.checks, p.entries, partner.startedOn || undefined, today), [p, partner.startedOn, today]);
+  if (p.status !== "ready") return <Loading error={p.status === "error" ? "読み込めませんでした" : undefined} />;
+  const noop = async () => false;
+  return (
+    <Day
+      date={date}
+      go={go}
+      src={{ ...scores, habits: p.habits, checks: p.checks, entries: p.entries, toggleCheck: () => {}, saveEntry: noop, readOnly: true, name: partner.name }}
+    />
+  );
 }
 
 const SLOT_EMOJI: Record<string, string> = { morning: "☀️", daytime: "🌤", night: "🌙" };
 
-function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
-  const { habits, checks, entries, toggleCheck, saveEntry } = useData();
-  const { defs, today, day, streak, days, start } = useScores();
+function Day({ date, go, src }: { date: DateStr; go: (d: DateStr) => void; src: DaySource }) {
+  const { habits, checks, entries, toggleCheck, saveEntry, defs, today, day, streak, days, start, readOnly } = src;
   const isFuture = date > today;
   const isToday = date === today;
   const r = day(date);
@@ -54,16 +121,16 @@ function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
     const d = defById.get(h.id);
     return d && (isActiveOn(d, date) || checked.has(h.id));
   });
-  const moodBoost = isToday && needsMoodBoost(days, today, start);
+  const moodBoost = !readOnly && isToday && needsMoodBoost(days, today, start);
 
   function toggle(h: Habit) {
-    if (isFuture) return;
+    if (isFuture || readOnly) return;
     userToggled.current = true;
     toggleCheck(date, h.id, !checked.has(h.id));
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-4">
+    <div className="space-y-4">
       {/* 上部:日付と今日の点数 */}
       <div className="sticky top-2 z-30 rounded-3xl border border-pink-100 bg-white/90 p-3 shadow-[0_8px_30px_-14px_rgba(219,39,119,0.45)] backdrop-blur dark:border-purple-950 dark:bg-zinc-900/90 dark:shadow-none">
         <div className="flex items-center justify-between gap-2">
@@ -74,6 +141,7 @@ function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
             <div className="text-lg font-bold">
               {formatMd(date)}
               {isToday && <span className="ml-2 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 px-2 py-0.5 text-xs text-white">今日</span>}
+              {src.name && <div className="text-xs font-bold text-pink-500">💕 {src.name}の記録(見るだけ)</div>}
             </div>
             {!isToday && (
               <button className="text-xs font-bold text-purple-600 underline" onClick={() => go(today)}>
@@ -129,13 +197,14 @@ function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
       {isFuture && <p className="text-center text-xs text-zinc-500">未来の日は、宣言とメモだけ書けます。</p>}
 
       <Card>
-        <TimeField emoji="☀️" label="起床時刻" value={entry?.wake_time ?? null} disabled={isFuture} onSave={(v) => saveEntry(date, { wake_time: v })} />
+        <TimeField emoji="☀️" label="起床時刻" value={entry?.wake_time ?? null} disabled={isFuture || readOnly} onSave={(v) => saveEntry(date, { wake_time: v })} />
       </Card>
 
       <Card>
         <AutoText
           label="📣 今日の宣言"
           multiline
+          disabled={readOnly}
           value={entry?.declaration ?? ""}
           onSave={(v) => saveEntry(date, { declaration: v })}
           empty="今日やり遂げることを書く"
@@ -143,7 +212,8 @@ function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
         />
       </Card>
 
-      {visible.length === 0 && (
+      {visible.length === 0 && readOnly && <p className="py-10 text-center text-sm text-zinc-400">まだ習慣がありません</p>}
+      {visible.length === 0 && !readOnly && (
         <Card className="text-center">
           <div className="text-3xl" aria-hidden>
             🌱
@@ -194,9 +264,9 @@ function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
                         role="checkbox"
                         aria-checked={on}
                         aria-label={h.name}
-                        disabled={isFuture}
+                        disabled={isFuture || readOnly}
                         onClick={() => toggle(h)}
-                        className="flex h-12 w-12 shrink-0 items-center justify-center disabled:opacity-30"
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center ${isFuture ? "opacity-30" : ""}`}
                       >
                         <span
                           className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-lg font-bold transition ${
@@ -213,14 +283,16 @@ function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
                       <div className="mx-3 mb-3 space-y-2 rounded-2xl bg-purple-50/80 px-4 py-3 text-sm dark:bg-purple-950/40">
                         <Detail label="💡 If-Then" text={h.if_then} />
                         <Detail label="⏱ 20秒の準備" text={h.prep_20sec} />
-                        {h.name.includes("アファメーション") && (
+                        {!readOnly && h.name.includes("アファメーション") && (
                           <Link href="/affirmation" className="inline-block font-bold text-purple-600 underline">
                             アファメーションを読む ›
                           </Link>
                         )}
-                        <Link href={`/settings?habit=${h.id}#habits`} className="block text-xs text-zinc-500 underline">
-                          この習慣を編集
-                        </Link>
+                        {!readOnly && (
+                          <Link href={`/settings?habit=${h.id}#habits`} className="block text-xs text-zinc-500 underline">
+                            この習慣を編集
+                          </Link>
+                        )}
                       </div>
                     )}
                   </li>
@@ -232,15 +304,15 @@ function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
       })}
 
       <Card>
-        <TimeField emoji="🌙" label="就寝時刻" value={entry?.sleep_time ?? null} disabled={isFuture} onSave={(v) => saveEntry(date, { sleep_time: v })} />
+        <TimeField emoji="🌙" label="就寝時刻" value={entry?.sleep_time ?? null} disabled={isFuture || readOnly} onSave={(v) => saveEntry(date, { sleep_time: v })} />
       </Card>
 
       <Card>
-        <AutoText label="🙏 感謝・できたこと3つ" multiline disabled={isFuture} value={entry?.gratitude ?? ""} onSave={(v) => saveEntry(date, { gratitude: v })} />
+        <AutoText label="🙏 感謝・できたこと3つ" multiline disabled={isFuture || readOnly} value={entry?.gratitude ?? ""} onSave={(v) => saveEntry(date, { gratitude: v })} />
       </Card>
 
       <Card>
-        <AutoText label="📝 メモ(TODOなど)" multiline rows={4} value={entry?.memo ?? ""} onSave={(v) => saveEntry(date, { memo: v })} />
+        <AutoText label="📝 メモ(TODOなど)" multiline rows={4} disabled={readOnly} value={entry?.memo ?? ""} onSave={(v) => saveEntry(date, { memo: v })} />
       </Card>
 
       {celebrate && <Celebration streak={streak} />}

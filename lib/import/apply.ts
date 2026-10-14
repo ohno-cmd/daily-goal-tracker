@@ -16,7 +16,11 @@ async function inChunks<T>(rows: T[], fn: (chunk: T[]) => Promise<unknown>) {
 }
 
 export async function applyPlan(sb: SupabaseClient, plan: ImportPlan, onStep: (s: string) => void): Promise<void> {
-  let habits = await must(sb.from("habits").select("*").order("sort_order"), "習慣の読み込み") as Habit[];
+  // パートナーの行も読めるので、必ず自分の行に絞る
+  const { data: auth } = await sb.auth.getUser();
+  const me = auth.user?.id;
+  if (!me) throw new Error("ログインが切れました");
+  let habits = await must(sb.from("habits").select("*").eq("user_id", me).order("sort_order"), "習慣の読み込み") as Habit[];
   const byName = () => new Map(habits.map((h) => [normName(h.name), h]));
 
   // 習慣リスト:名前で照合して更新、無ければ追加。並び順はシートの順
@@ -29,10 +33,10 @@ export async function applyPlan(sb: SupabaseClient, plan: ImportPlan, onStep: (s
       if (found) await must(sb.from("habits").update(fields).eq("id", found.id), `習慣「${h.name}」`);
       else await must(sb.from("habits").insert(fields), `習慣「${h.name}」`);
     }
-    habits = await must(sb.from("habits").select("*").order("sort_order"), "習慣の読み込み") as Habit[];
+    habits = await must(sb.from("habits").select("*").eq("user_id", me).order("sort_order"), "習慣の読み込み") as Habit[];
   }
 
-  const profile = (await must(sb.from("profiles").select("*").limit(1), "プロフィール") as Profile[])[0];
+  const profile = (await must(sb.from("profiles").select("*").eq("user_id", me).limit(1), "プロフィール") as Profile[])[0];
 
   // 日次チェック:同じ日付は上書き
   if (plan.daily?.dates.length) {

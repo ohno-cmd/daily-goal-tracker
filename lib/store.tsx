@@ -83,17 +83,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) throw new Error("ログインが切れました。再読み込みしてください。");
+      // パートナーの行も読めるので、必ず自分の行に絞る
+      const me = auth.user.id;
       const [profiles, habits, versions, checks, entries] = await Promise.all([
-        supabase.from("profiles").select("*").then(({ data, error }) => {
+        supabase.from("profiles").select("*").eq("user_id", me).then(({ data, error }) => {
           if (error) throw new Error(error.message);
           return data as Profile[];
         }),
-        fetchAll<Habit>((f, t) => supabase.from("habits").select("*").order("sort_order").range(f, t)),
-        fetchAll<HabitVersion>((f, t) => supabase.from("habit_versions").select("*").order("valid_from").range(f, t)),
+        fetchAll<Habit>((f, t) => supabase.from("habits").select("*").eq("user_id", me).order("sort_order").range(f, t)),
+        fetchAll<HabitVersion>((f, t) => supabase.from("habit_versions").select("*").eq("user_id", me).order("valid_from").range(f, t)),
         fetchAll<Pick<HabitCheck, "date" | "habit_id">>((f, t) =>
-          supabase.from("habit_checks").select("date, habit_id").order("date").order("id").range(f, t),
+          supabase.from("habit_checks").select("date, habit_id").eq("user_id", me).order("date").order("id").range(f, t),
         ),
-        fetchAll<DailyEntry>((f, t) => supabase.from("daily_entries").select("*").order("date").range(f, t)),
+        fetchAll<DailyEntry>((f, t) => supabase.from("daily_entries").select("*").eq("user_id", me).order("date").range(f, t)),
       ]);
       let profile = profiles[0] ?? null;
       if (!profile) {
@@ -193,10 +195,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const refreshVersions = useCallback(async () => {
     const versions = await fetchAll<HabitVersion>((f, t) =>
-      supabase.from("habit_versions").select("*").order("valid_from").range(f, t),
+      supabase.from("habit_versions").select("*").eq("user_id", state.userId).order("valid_from").range(f, t),
     );
     setState((s) => ({ ...s, versions }));
-  }, [supabase]);
+  }, [supabase, state.userId]);
 
   const saveHabit = useCallback(
     async (id: string, patch: HabitPatch) => {
@@ -316,18 +318,30 @@ export function toHabitDefs(habits: Habit[], versions: HabitVersion[]): HabitDef
   }));
 }
 
-/** 集計に使う値をまとめて返す */
-export function useScores() {
+/** 習慣・✓・記録から、集計に使う値をまとめて作る(自分の分にもパートナーの分にも使う) */
+export function computeScores(
+  habits: Habit[],
+  versions: HabitVersion[],
+  checks: ChecksByDate,
+  entries: Map<DateStr, DailyEntry>,
+  startedOn: DateStr | undefined,
+  today: DateStr,
+) {
+  const defs = toHabitDefs(habits, versions);
+  const firstData = [...checks.keys(), ...entries.keys()].sort()[0];
+  const start = minDate(startedOn, firstData) ?? today;
+  const days: DayResult[] = scoreDays(defs, checks, start, today);
+  const byDate = new Map(days.map((d) => [d.date, d]));
+  const day = (d: DateStr) => byDate.get(d) ?? scoreDay(defs, checks.get(d), d);
+  const streak = currentStreak((d) => day(d).allA, today, start);
+  return { defs, start, today, days, day, streak, yesterday: addDays(today, -1) };
+}
+
+export type Scores = ReturnType<typeof computeScores>;
+
+/** 自分の集計 */
+export function useScores(): Scores {
   const { habits, versions, checks, entries, profile } = useData();
   const today = useToday();
-  return useMemo(() => {
-    const defs = toHabitDefs(habits, versions);
-    const firstData = [...checks.keys(), ...entries.keys()].sort()[0];
-    const start = minDate(profile?.started_on, firstData) ?? today;
-    const days: DayResult[] = scoreDays(defs, checks, start, today);
-    const byDate = new Map(days.map((d) => [d.date, d]));
-    const day = (d: DateStr) => byDate.get(d) ?? scoreDay(defs, checks.get(d), d);
-    const streak = currentStreak((d) => day(d).allA, today, start);
-    return { defs, start, today, days, day, streak, yesterday: addDays(today, -1) };
-  }, [habits, versions, checks, entries, profile?.started_on, today]);
+  return useMemo(() => computeScores(habits, versions, checks, entries, profile?.started_on, today), [habits, versions, checks, entries, profile?.started_on, today]);
 }
