@@ -21,7 +21,13 @@ export async function sendCode(_prev: LoginState, form: FormData): Promise<Login
     email,
     options: { shouldCreateUser: true, emailRedirectTo: `${origin}/auth/callback` },
   });
-  if (error) return { step: "email", email, error: `送信できませんでした:${error.message}` };
+  if (error) {
+    // Supabase標準のメール送信は1時間に数通まで
+    const msg = /rate limit/i.test(error.message)
+      ? "メールの送信回数の上限に達しました。1時間ほど待ってから、もう一度お試しください。"
+      : `送信できませんでした:${error.message}`;
+    return { step: "email", email, error: msg };
+  }
   return { step: "code", email, info: "メールを送りました。届いたコードを入力するか、メールのリンクを開いてください。" };
 }
 
