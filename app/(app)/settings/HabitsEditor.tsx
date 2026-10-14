@@ -4,12 +4,13 @@ import { useState } from "react";
 import { AutoText, PriorityBadge, btnCls, inputCls, primaryBtnCls } from "@/components/ui";
 import { pillarMatches } from "@/lib/import/sheets";
 import type { Priority } from "@/lib/scoring";
-import { useData, type HabitPatch } from "@/lib/store";
+import { useData, usePillarTerm, type HabitPatch } from "@/lib/store";
 import { TIME_SLOTS, type Habit, type Pillar, type TimeSlot } from "@/lib/types";
 
 /** 習慣の編集:追加・並べ替え・アーカイブ(削除ではなく非表示。過去の✓は残る) */
 export function HabitsEditor({ pillars, openId }: { pillars: Pillar[]; openId: string | null }) {
   const { habits, saveHabit, addHabit, reorderHabits } = useData();
+  const { term } = usePillarTerm();
   const [open, setOpen] = useState<string | null>(openId);
   const [showArchived, setShowArchived] = useState(false);
   const active = habits.filter((h) => !h.archived_at);
@@ -70,7 +71,7 @@ export function HabitsEditor({ pillars, openId }: { pillars: Pillar[]; openId: s
                       <p className="text-xs text-zinc-500">優先度の変更は今日から反映します。前日までの点数・◎は変わりません。</p>
                       <AutoText label="習慣名" value={h.name} onSave={(v) => (v.trim() ? save(h, { name: v.trim() }) : Promise.resolve(false))} />
                       <label className="block text-sm">
-                        <span className="mb-1 block text-zinc-600 dark:text-zinc-400">紐づく柱</span>
+                        <span className="mb-1 block text-zinc-600 dark:text-zinc-400">紐づく{term}</span>
                         <PillarInput value={h.pillar_label} options={labels} onSave={(v) => save(h, { pillar_label: v, pillar_id: pillarIdFor(v) })} />
                       </label>
                       <AutoText label="If-Then" multiline rows={2} value={h.if_then} onSave={(v) => save(h, { if_then: v })} />
@@ -99,7 +100,7 @@ export function HabitsEditor({ pillars, openId }: { pillars: Pillar[]; openId: s
         </div>
       ))}
 
-      <NewHabit labels={labels} onAdd={(h) => addHabit({ ...h, pillar_id: pillarIdFor(h.pillar_label ?? "") })} />
+      <NewHabit term={term} labels={labels} onAdd={(h) => addHabit({ ...h, pillar_id: pillarIdFor(h.pillar_label ?? "") })} />
 
       {archived.length > 0 && (
         <div>
@@ -139,7 +140,7 @@ function PillarInput({ value, options, onSave }: { value: string; options: strin
   );
 }
 
-function NewHabit({ labels, onAdd }: { labels: string[]; onAdd: (h: HabitPatch & Pick<Habit, "name" | "priority" | "time_slot">) => Promise<unknown> }) {
+function NewHabit({ term, labels, onAdd }: { term: string; labels: string[]; onAdd: (h: HabitPatch & Pick<Habit, "name" | "priority" | "time_slot">) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ name: "", time_slot: "morning" as TimeSlot, time_label: "", priority: "B" as Priority, pillar_label: "" });
   if (!open)
@@ -175,7 +176,7 @@ function NewHabit({ labels, onAdd }: { labels: string[]; onAdd: (h: HabitPatch &
           <option value="C">C</option>
         </select>
       </div>
-      <input list="pillar-options" placeholder="紐づく柱" value={f.pillar_label} onChange={(e) => setF({ ...f, pillar_label: e.target.value })} className={inputCls} />
+      <input list="pillar-options" placeholder={`紐づく${term}`} value={f.pillar_label} onChange={(e) => setF({ ...f, pillar_label: e.target.value })} className={inputCls} />
       <datalist id="pillar-options">
         {labels.map((o) => (
           <option key={o} value={o} />

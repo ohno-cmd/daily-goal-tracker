@@ -8,7 +8,7 @@ import { WEEKDAYS, weekday } from "@/lib/dates";
 import { toCsv } from "@/lib/import/csv";
 import { useRows } from "@/lib/rows";
 import { percent, priorityOn } from "@/lib/scoring";
-import { useData, useScores } from "@/lib/store";
+import { useData, usePillarTerm, useScores } from "@/lib/store";
 import { TIME_SLOTS, type Pillar, type Reward, type TextItem } from "@/lib/types";
 import { HabitsEditor } from "./HabitsEditor";
 import { ImportPanel } from "./ImportPanel";
@@ -69,6 +69,7 @@ export function SettingsView() {
       <Card>
         <SectionTitle>アカウント</SectionTitle>
         <LoginSettings />
+        <PillarTermSetting />
         <div className="mt-4 flex items-center justify-between gap-2 text-sm">
           <span className="truncate text-zinc-500">{email}</span>
           <form action="/auth/signout" method="post">
@@ -76,6 +77,21 @@ export function SettingsView() {
           </form>
         </div>
       </Card>
+    </div>
+  );
+}
+
+/** 「柱」の呼び方 */
+function PillarTermSetting() {
+  const { saveProfile } = useData();
+  const { term } = usePillarTerm();
+  return (
+    <div className="mt-4">
+      <AutoText
+        label="「柱」の呼び方(例:大切な軸)"
+        value={term}
+        onSave={(v) => (v.trim() && v.trim().length <= 10 ? saveProfile({ pillar_term: v.trim() }) : Promise.resolve(false))}
+      />
     </div>
   );
 }

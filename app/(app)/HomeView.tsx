@@ -7,7 +7,7 @@ import { Loading, primaryBtnCls, rateColor } from "@/components/ui";
 import { addDays, formatMd, hourInTokyo, weekday, weekStartOf, WEEKDAYS, type DateStr } from "@/lib/dates";
 import { useRows } from "@/lib/rows";
 import { evaluateRewards, isActiveOn, longestStreak, percent, summarizeWeek, weekStarts } from "@/lib/scoring";
-import { useData, useScores } from "@/lib/store";
+import { useData, usePillarTerm, useScores } from "@/lib/store";
 import { TIME_SLOTS, type Reward, type TextItem } from "@/lib/types";
 import mascot from "@/public/loading.png";
 
@@ -18,6 +18,7 @@ export function HomeView() {
   const rewards = useRows<Reward & { sort_order?: number }>("rewards", "step");
   const affirmations = useRows<TextItem>("affirmations");
   const [bounce, setBounce] = useState(0);
+  const { title: pillarTitle } = usePillarTerm();
 
   const rule = { rate: Number(profile?.reward_rate ?? 0.8), aDays: profile?.reward_a_days ?? 6 };
   const week = useMemo(() => {
@@ -33,6 +34,10 @@ export function HomeView() {
   const hour = hourInTokyo();
   const greeting = hour >= 4 && hour < 10 ? "おはよう" : hour >= 10 && hour < 17 ? "こんにちは" : "こんばんは";
   const r = day(today);
+  const yesterday = addDays(today, -1);
+  const monthADays = days.filter((d) => d.date.slice(0, 7) === today.slice(0, 7) && d.allA).length;
+  // 途切れた次の日:昨日は◎でなく、それより前に◎の日がある
+  const comeback = !day(yesterday).allA && days.some((d) => d.date < yesterday && d.allA);
 
   // 次にやる習慣:今の時間帯から先の、まだ✓していないもの
   const slotNow = hour < 11 ? 0 : hour < 18 ? 1 : 2;
@@ -76,7 +81,7 @@ export function HomeView() {
               )}
               <span aria-hidden> 🌸</span>
             </h1>
-            <p className="mt-1 text-sm opacity-80">{cheer(r.rate, r.allA, hour)}</p>
+            <p className="mt-1 text-sm opacity-80">{cheer(r.rate, r.allA, hour, comeback)}</p>
           </div>
           <button type="button" onClick={() => setBounce((b) => b + 1)} aria-label="マスコット" className="shrink-0">
             <Image key={bounce} src={mascot} alt="" width={112} unoptimized priority className="animate-[wiggle_1.2s_ease-in-out_2] rounded-2xl" />
@@ -149,12 +154,27 @@ export function HomeView() {
 
       {/* 連続日数と今日のことば */}
       <div className="grid grid-cols-5 gap-3">
-        <div className="col-span-2 flex flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-orange-100 to-pink-100 p-3 text-center dark:from-orange-950/40 dark:to-pink-950/40">
-          <span className="text-3xl" aria-hidden>
-            🔥
-          </span>
-          <span className="text-2xl font-bold tabular-nums">{streak}日</span>
-          <span className="text-[11px] text-zinc-500">連続 ・ 最長 {longestStreak(days)}日</span>
+        <div className="col-span-2 grid grid-rows-2 gap-2">
+          <div className="flex items-center justify-center gap-2 rounded-3xl bg-gradient-to-br from-pink-100 to-purple-100 p-2 dark:from-pink-950/40 dark:to-purple-950/40">
+            <span className="text-2xl" aria-hidden>
+              🌷
+            </span>
+            <div className="leading-tight">
+              <div className="text-[11px] text-zinc-500">今月の◎</div>
+              <div className="text-xl font-bold tabular-nums" data-testid="month-a-days">
+                {monthADays}日
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-2 rounded-3xl bg-gradient-to-br from-orange-100 to-pink-100 p-2 dark:from-orange-950/40 dark:to-pink-950/40">
+            <span className="text-2xl" aria-hidden>
+              🔥
+            </span>
+            <div className="leading-tight">
+              <div className="text-[11px] text-zinc-500">連続(最長{longestStreak(days)})</div>
+              <div className="text-xl font-bold tabular-nums">{streak}日</div>
+            </div>
+          </div>
         </div>
         <Link href="/affirmation" className="col-span-3 flex flex-col justify-center rounded-3xl bg-gradient-to-br from-purple-100 to-pink-50 p-4 dark:from-purple-950/50 dark:to-pink-950/30">
           <span className="text-xs font-bold text-purple-500">💬 今日のことば</span>
@@ -163,11 +183,13 @@ export function HomeView() {
       </div>
 
       {/* ショートカット */}
-      <nav className="grid grid-cols-4 gap-2">
+      <nav className="grid grid-cols-3 gap-2">
         {[
-          ["/history", "📅", "カレンダー"],
-          ["/pillars", "🏛️", "5つの柱"],
+          ["/wins", "🌟", "できたこと"],
           ["/affirmation", "💖", "ことば"],
+          ["/pillars", "🏛️", pillarTitle],
+          ["/history", "📅", "カレンダー"],
+          ["/review", "📝", "週次レビュー"],
           ["/dashboard", "📊", "グラフ"],
         ].map(([href, emoji, label]) => (
           <Link
@@ -187,8 +209,10 @@ export function HomeView() {
 }
 
 /** ひとこと */
-function cheer(rate: number, allA: boolean, hour: number): string {
+function cheer(rate: number, allA: boolean, hour: number, comeback: boolean): string {
+  if (allA && comeback) return "また始められた!そんな自分がえらい 🌷";
   if (allA) return "今日はA全達成!最高の一日 ✨";
+  if (comeback) return "おかえり!また始めた自分えらい 🌷";
   if (rate >= 0.6) return "いい調子。このままいこう 💪";
   if (rate > 0) return "ひとつずつ、できたら✓を付けよう";
   return hour < 12 ? "今日もいい一日にしよう ☀️" : "今からでも大丈夫。ひとつ✓してみよう";

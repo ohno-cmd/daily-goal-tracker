@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { usePillarTerm } from "@/lib/store";
 
-/** 目標の中の切り替え(目標の全体像 / 5つの柱) */
+/** 目標の中の切り替え(目標の全体像 / 5つの柱・大切な軸) */
 export function GoalsTabs() {
   const path = usePathname();
+  const { title } = usePillarTerm();
   const tabs = [
     { href: "/goals", label: "🎯 目標の全体像" },
-    { href: "/pillars", label: "🏛️ 5つの柱" },
+    { href: "/pillars", label: `🏛️ ${title}` },
   ];
   return <Tabs tabs={tabs} path={path} />;
 }

@@ -318,6 +318,13 @@ export function toHabitDefs(habits: Habit[], versions: HabitVersion[]): HabitDef
   }));
 }
 
+/** 「柱」の呼び方。term は「〇〇別」「紐づく〇〇」に、title は見出しに使う */
+export function usePillarTerm() {
+  const { profile } = useData();
+  const term = profile?.pillar_term?.trim() || "柱";
+  return { term, title: term === "柱" ? "5つの柱" : term };
+}
+
 /** 習慣・✓・記録から、集計に使う値をまとめて作る(自分の分にもパートナーの分にも使う) */
 export function computeScores(
   habits: Habit[],

@@ -6,7 +6,7 @@ import { addDays } from "@/lib/dates";
 import { pillarMatches } from "@/lib/import/sheets";
 import { useRows } from "@/lib/rows";
 import { average, habitRates, isActiveOn, percent } from "@/lib/scoring";
-import { useData, useScores } from "@/lib/store";
+import { useData, usePillarTerm, useScores } from "@/lib/store";
 import type { Pillar } from "@/lib/types";
 
 const COLORS = ["from-pink-400 to-rose-400", "from-purple-400 to-fuchsia-400", "from-sky-400 to-indigo-400", "from-amber-300 to-orange-400", "from-teal-300 to-emerald-400"];
@@ -14,24 +14,25 @@ const COLORS = ["from-pink-400 to-rose-400", "from-purple-400 to-fuchsia-400", "
 export function PillarsView() {
   const { status, error } = useData();
   const list = useRows<Pillar>("pillars");
+  const { term, title } = usePillarTerm();
   if (status !== "ready" || list.status === "loading") return <Loading error={error} />;
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <GoalsTabs />
       <div className="flex items-center justify-between gap-2">
-        <PageTitle emoji="🏛️">5つの柱</PageTitle>
+        <PageTitle emoji="🏛️">{title}</PageTitle>
         <button className={btnCls} onClick={() => list.insert({ name: "" })}>
-          + 柱を追加
+          + {term}を追加
         </button>
       </div>
       <p className="text-sm text-purple-900/60 dark:text-purple-200/60">なぜやるのか、を見返す場所。3ヶ月ごとに見直します。</p>
       {list.rows.length === 0 && <p className="py-10 text-center text-sm text-zinc-400">まだありません。設定のインポートで「ゴール」シートを取り込めます。</p>}
-      <Pillars list={list} />
+      <Pillars list={list} term={term} />
     </div>
   );
 }
 
-function Pillars({ list }: { list: ReturnType<typeof useRows<Pillar>> }) {
+function Pillars({ list, term }: { list: ReturnType<typeof useRows<Pillar>>; term: string }) {
   const { habits, checks } = useData();
   const { defs, today } = useScores();
   const rates = habitRates(defs, checks, addDays(today, -29), today);
@@ -55,7 +56,7 @@ function Pillars({ list }: { list: ReturnType<typeof useRows<Pillar>> }) {
           <article key={p.id} className="overflow-hidden rounded-3xl border border-pink-100 bg-white/85 shadow-[0_8px_30px_-14px_rgba(219,39,119,0.4)] backdrop-blur dark:border-purple-950 dark:bg-zinc-900/70 dark:shadow-none">
             <header className={`flex items-center gap-3 bg-gradient-to-r ${COLORS[i % COLORS.length]} px-4 py-3 text-white`}>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/25 text-lg font-bold">{i + 1}</span>
-              <AutoText value={p.name} onSave={save(p, "name")} placeholder="柱の名前" className="flex-1 [&_button]:text-white/80" inputClassName="text-lg font-bold text-zinc-900" viewClassName="!text-white" />
+              <AutoText value={p.name} onSave={save(p, "name")} placeholder={`${term}の名前`} className="flex-1 [&_button]:text-white/80" inputClassName="text-lg font-bold text-zinc-900" viewClassName="!text-white" />
               <div className="shrink-0 text-right leading-tight">
                 <div className="text-[10px] opacity-90">直近30日</div>
                 <div className="text-xl font-bold tabular-nums">{percent(avg)}</div>
@@ -96,7 +97,7 @@ function Pillars({ list }: { list: ReturnType<typeof useRows<Pillar>> }) {
 
               {lr.length > 0 && (
                 <div>
-                  <div className="mb-2 text-xs font-bold text-purple-900/60 dark:text-purple-200/60">この柱の習慣(直近30日)</div>
+                  <div className="mb-2 text-xs font-bold text-purple-900/60 dark:text-purple-200/60">この{term}の習慣(直近30日)</div>
                   <ul className="space-y-1.5">
                     {lr.map(({ h, r }) => (
                       <li key={h.id} className="flex items-center gap-2 text-sm">
@@ -115,7 +116,7 @@ function Pillars({ list }: { list: ReturnType<typeof useRows<Pillar>> }) {
                 <summary className="cursor-pointer select-none py-1">並べ替え・削除</summary>
                 <div className="mt-2 flex justify-between">
                   <MoveButtons onUp={() => list.move(p.id, -1)} onDown={() => list.move(p.id, 1)} disabledUp={i === 0} disabledDown={i === list.rows.length - 1} />
-                  <button className={`${btnCls} text-red-600`} onClick={() => confirm(`柱「${p.name}」を削除しますか?(紐づく習慣は残ります)`) && list.remove(p.id)}>
+                  <button className={`${btnCls} text-red-600`} onClick={() => confirm(`${term}「${p.name}」を削除しますか?(紐づく習慣は残ります)`) && list.remove(p.id)}>
                     削除
                   </button>
                 </div>

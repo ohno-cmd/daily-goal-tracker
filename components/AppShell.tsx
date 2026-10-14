@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useData } from "@/lib/store";
+import { useData, usePillarTerm } from "@/lib/store";
 
 type Item = { href: string; label: string; icon: React.ReactNode; mobile: boolean };
 
@@ -20,13 +20,14 @@ const ITEMS: Item[] = [
   { href: "/pillars", label: "5つの柱", mobile: false, icon: svg(<><path d="M3 21h18M5 21V9M9.5 21V9M14.5 21V9M19 21V9M2 9l10-6 10 6Z" /></>) },
   { href: "/dashboard", label: "ダッシュボード", mobile: false, icon: svg(<><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></>) },
   { href: "/review", label: "振り返り", mobile: true, icon: svg(<><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5M12 7v5l3 2" /></>) },
+  { href: "/wins", label: "できたこと", mobile: false, icon: svg(<><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9Z" /></>) },
   { href: "/affirmation", label: "アファメーション", mobile: false, icon: svg(<><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" /></>) },
   { href: "/settings", label: "設定", mobile: true, icon: svg(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></>) },
 ];
 
 function isActive(path: string, href: string, mobile = false) {
   if (href === "/") return path === "/";
-  // スマホでは「目標」タブの中に5つの柱がある
+  // スマホでは「目標」タブの中に柱(大切な軸)がある
   if (mobile && href === "/goals") return path.startsWith("/goals") || path.startsWith("/pillars");
   if (href === "/review") return path.startsWith("/review") || path.startsWith("/history") || (mobile && path.startsWith("/dashboard"));
   return path.startsWith(href);
@@ -58,6 +59,8 @@ function GoalLine() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const { title: pillarTitle } = usePillarTerm();
+  const labelOf = (it: Item) => (it.href === "/pillars" ? pillarTitle : it.label);
   return (
     <div className="flex min-h-dvh w-full">
       {/* PC:左のサイドバー */}
@@ -77,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             }`}
           >
             {it.icon}
-            {it.label}
+            {labelOf(it)}
           </Link>
         ))}
       </nav>

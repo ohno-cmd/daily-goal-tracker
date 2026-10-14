@@ -17,7 +17,7 @@ import {
   sleepMinutes,
   timeToMinutes,
 } from "@/lib/scoring";
-import { useData, useScores } from "@/lib/store";
+import { useData, usePillarTerm, useScores } from "@/lib/store";
 import type { MonthlySales } from "@/lib/types";
 
 const PERIODS = [
@@ -30,6 +30,7 @@ export function DashboardView() {
   const { status, error, habits, entries, checks } = useData();
   const { defs, days, start, today, streak } = useScores();
   const sales = useRows<MonthlySales & { sort_order?: number }>("monthly_sales", "month");
+  const { term: pillarTerm } = usePillarTerm();
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["key"]>("30");
   if (status !== "ready") return <Loading error={error} />;
 
@@ -102,7 +103,7 @@ export function DashboardView() {
           {habitBars.length ? <RateBars data={habitBars} /> : <Empty />}
         </Card>
         <Card>
-          <SectionTitle>柱別の平均達成率</SectionTitle>
+          <SectionTitle>{pillarTerm}別の平均達成率</SectionTitle>
           {pillarBars.length ? <RateBars data={pillarBars} /> : <Empty />}
         </Card>
       </div>
