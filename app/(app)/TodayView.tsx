@@ -143,6 +143,19 @@ function Day({ date, go }: { date: DateStr; go: (d: DateStr) => void }) {
         />
       </Card>
 
+      {visible.length === 0 && (
+        <Card className="text-center">
+          <div className="text-3xl" aria-hidden>
+            🌱
+          </div>
+          <p className="mt-2 font-bold">まだ習慣がありません</p>
+          <p className="mt-1 text-sm text-purple-900/60 dark:text-purple-200/60">毎日チェックしたい行動を決めて、ここに並べましょう。</p>
+          <Link href="/settings#habits" className={`${primaryBtnCls} mt-4`}>
+            習慣を追加する
+          </Link>
+        </Card>
+      )}
+
       {TIME_SLOTS.map((slot) => {
         const list = visible.filter((h) => h.time_slot === slot.value);
         if (!list.length) return null;

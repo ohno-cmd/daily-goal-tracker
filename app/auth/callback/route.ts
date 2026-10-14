@@ -1,6 +1,6 @@
 // メールのリンク、Googleログインからの戻り先
 import { NextResponse, type NextRequest } from "next/server";
-import { isAllowedEmail } from "@/lib/auth/allowed";
+import { isAllowedUser } from "@/lib/auth/allowed";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return to("/login?error=callback");
-  if (!isAllowedEmail(data.user?.email)) {
+  if (!isAllowedUser(data.user?.email, data.user?.app_metadata)) {
     await supabase.auth.signOut();
     return to("/login?error=not_allowed");
   }

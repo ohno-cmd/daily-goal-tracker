@@ -1,7 +1,7 @@
-// すべての画面の手前で、ログインの有無と ALLOWED_EMAILS を確かめる
+// すべての画面の手前で、ログインの有無と、ログインしてよい人か(管理者が作った人・ALLOWED_EMAILS)を確かめる
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { isAllowedEmail } from "@/lib/auth/allowed";
+import { isAllowedUser } from "@/lib/auth/allowed";
 import { supabaseConfigured, supabaseKey, supabaseUrl } from "@/lib/supabase/env";
 
 const PUBLIC_PATHS = ["/login", "/auth/"];
@@ -28,7 +28,7 @@ export async function proxy(request: NextRequest) {
   const claims = data?.claims;
 
   if (!claims) return isPublic ? response : redirectTo(request, "/login", response);
-  if (!isAllowedEmail(claims.email as string | undefined)) {
+  if (!isAllowedUser(claims.email as string | undefined, claims.app_metadata as Record<string, unknown> | undefined)) {
     await supabase.auth.signOut();
     return redirectTo(request, "/login?error=not_allowed", response);
   }

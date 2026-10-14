@@ -19,7 +19,7 @@ npm run db:seed -- <メール>   # 初回ログイン後、そのユーザーに
 | `npm test` | `lib/scoring.ts`(点数・連続日数・ご褒美・売上)とインポートの単体テスト |
 | `npm run db:migrate` | `supabase/migrations` の未適用SQLを流す(`DATABASE_URL` を使う) |
 | `npm run db:seed -- <メール>` | 習慣リスト(SPEC 6.2)を入れる。習慣が既にあれば何もしない |
-| `npm run user -- <名前> [メール]` | ログイン用の名前とパスワードを決める。メールを付けると新しい人を作る |
+| `npm run user -- <名前> [メール] [--empty]` | ログイン用の名前とパスワードを決める。メールを付けると新しい人を作る(--empty で習慣なし) |
 | `npm run db:test-user` | 開発用テストユーザー(`DEV_TEST_EMAIL`)を作る。`npm run dev` のときだけログイン画面にボタンが出る |
 | `node scripts/make-icons.mjs` | PWAのアイコンを作り直す |
 
@@ -47,8 +47,8 @@ SPECからの追加:`habits.active_from`(満点に数え始める日)。イン�
 ```bash
 # 既にいる人の名前・パスワードを決め直す(パスワードは画面に出ない入力で聞かれる)
 node --env-file=.env.local scripts/db.mjs user <名前>
-# 新しい人を作る(習慣リストも入る)
-node --env-file=.env.local scripts/db.mjs user <名前> <メール>
+# 新しい人を作る(習慣リストも入る。空から始めるときは --empty)
+node --env-file=.env.local scripts/db.mjs user <名前> <メール> [--empty]
 ```
 
-新しい人は、メールを `ALLOWED_EMAILS`(`.env.local` と Vercel の環境変数)にも足すとログインできる。Vercelは環境変数を変えたら Redeploy する。
+このコマンドで作った人は `app_metadata.allowed` が付くので、`ALLOWED_EMAILS` に足さなくてもログインできる(本人は app_metadata を書き換えられない)。メールが無い人は `<名前>@daily-goal.local` のような届かないアドレスで作る。その人は「パスワードを忘れたとき」のメールが使えないので、パスワードはこのコマンドで決め直す。

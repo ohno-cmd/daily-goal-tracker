@@ -134,10 +134,11 @@ function askHidden(question) {
 }
 
 // ログイン用の名前とパスワードを管理者が決める。
-//   node scripts/db.mjs user <名前> [メール]
+//   node scripts/db.mjs user <名前> [メール] [--empty]
 // パスワードは環境変数 LOGIN_PASSWORD か、画面に出ない入力で受け取り、bcryptのハッシュだけをDBに保存する。
-// メールのユーザーがいなければ作り、習慣リストも入れる(ログインには ALLOWED_EMAILS への追加も必要)
-async function setUser(db, name, email) {
+// メールのユーザーがいなければ作る。習慣リスト(SPEC 6.2)も入れるが、--empty なら空から始める。
+// 作った人は app_metadata.allowed を付けるので、ALLOWED_EMAILS に足さなくてもログインできる
+async function setUser(db, name, email, { empty = false } = {}) {
   name = (name || "").trim();
   if (!/^[^\s@]{2,30}$/.test(name)) {
     console.error("使い方: node scripts/db.mjs user <名前> [メール](名前は2〜30文字、空白と@は使えません)");
@@ -172,27 +173,33 @@ async function setUser(db, name, email) {
     const id = await createAuthUser(db, email, pw);
     user = { id, email };
     console.log(`${email} を作りました。`);
-    await seed(db, email);
+    if (empty) await db.query("insert into public.profiles (user_id) values ($1) on conflict (user_id) do nothing", [id]);
+    else await seed(db, email);
   }
   await db.query("begin");
   await db.query("insert into public.profiles (user_id) values ($1) on conflict (user_id) do nothing", [user.id]);
   await db.query("update public.profiles set username = $2 where user_id = $1", [user.id, name]);
-  await db.query("update auth.users set encrypted_password = extensions.crypt($2, extensions.gen_salt('bf')) where id = $1", [user.id, pw]);
+  await db.query(
+    `update auth.users set encrypted_password = extensions.crypt($2, extensions.gen_salt('bf')),
+       raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"allowed": true}'::jsonb
+     where id = $1`,
+    [user.id, pw],
+  );
   await db.query("commit");
   console.log(`設定しました:名前「${name}」(${user.email})`);
-  const allowed = (process.env.ALLOWED_EMAILS || "").toLowerCase().split(",").map((x) => x.trim());
-  if (!allowed.includes(user.email.toLowerCase())) console.log(`※ ${user.email} を ALLOWED_EMAILS(.env.local と Vercel)に足すとログインできます。`);
 }
 
-const [cmd, arg, arg2] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const flags = new Set(args.filter((a) => a.startsWith("--")));
+const [cmd, arg, arg2] = args.filter((a) => !a.startsWith("--"));
 const db = connect();
 await db.connect();
 try {
   if (cmd === "migrate") await migrate(db);
   else if (cmd === "seed") await seed(db, arg);
   else if (cmd === "test-user") await testUser(db);
-  else if (cmd === "user") await setUser(db, arg, arg2);
-  else console.error("使い方: node scripts/db.mjs migrate | seed [メール] | test-user | user <名前> [メール]");
+  else if (cmd === "user") await setUser(db, arg, arg2, { empty: flags.has("--empty") });
+  else console.error("使い方: node scripts/db.mjs migrate | seed [メール] | test-user | user <名前> [メール] [--empty]");
 } finally {
   await db.end();
 }

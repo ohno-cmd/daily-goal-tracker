@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { isAllowedEmail } from "@/lib/auth/allowed";
+import { isAllowedEmail, isAllowedUser } from "@/lib/auth/allowed";
 import { createClient } from "@/lib/supabase/server";
 
 export type LoginState = { step: "email" | "code"; email: string; error?: string; info?: string };
@@ -55,9 +55,13 @@ export async function passwordLogin(_prev: PasswordState, form: FormData): Promi
 
   const supabase = await createClient();
   const { data: email } = await supabase.rpc("email_for_login", { p_username: name });
-  if (typeof email !== "string" || !isAllowedEmail(email)) return { name, error: WRONG };
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (typeof email !== "string") return { name, error: WRONG };
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { name, error: /rate limit/i.test(error.message) ? "試行回数が多すぎます。少し待ってからお試しください。" : WRONG };
+  if (!isAllowedUser(data.user?.email, data.user?.app_metadata)) {
+    await supabase.auth.signOut();
+    return { name, error: WRONG };
+  }
   redirect("/");
 }
 
