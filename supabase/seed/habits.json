@@ -1,0 +1,22 @@
+[
+  { "time_slot": "morning", "time_label": "6:00", "name": "スマホを見ずに水を1杯", "priority": "A", "pillar_label": "規則正しい生活" },
+  { "time_slot": "morning", "time_label": "6:05", "name": "深呼吸・感謝・アファメーション", "priority": "B", "pillar_label": "揺るがない自信" },
+  { "time_slot": "morning", "time_label": "6:10", "name": "運動20分～90分", "priority": "A", "pillar_label": "筋トレの継続" },
+  { "time_slot": "morning", "time_label": "6:30", "name": "今日の宣言を書く", "priority": "A", "pillar_label": "宣言してやり遂げる" },
+  { "time_slot": "morning", "time_label": "6:40", "name": "読書10分", "priority": "B", "pillar_label": "学び・成長" },
+  { "time_slot": "morning", "time_label": "6:50", "name": "5分掃除", "priority": "B", "pillar_label": "掃除" },
+  { "time_slot": "morning", "time_label": "6:55", "name": "髪と顔を整える", "priority": "A", "pillar_label": "身なり" },
+  { "time_slot": "daytime", "time_label": "—", "name": "誰か1人を褒める", "priority": "B", "pillar_label": "人への思いやり" },
+  { "time_slot": "daytime", "time_label": "—", "name": "困っている人に声をかける", "priority": "C", "pillar_label": "人への思いやり" },
+  { "time_slot": "daytime", "time_label": "—", "name": "相手の話を最後まで聞く", "priority": "B", "pillar_label": "相手を理解する" },
+  { "time_slot": "daytime", "time_label": "—", "name": "朝の宣言をやり遂げる", "priority": "A", "pillar_label": "宣言してやり遂げる" },
+  { "time_slot": "daytime", "time_label": "〜14:00", "name": "14時以降カフェインなし", "priority": "B", "pillar_label": "規則正しい生活" },
+  { "time_slot": "daytime", "time_label": "〜21:00", "name": "筋トレ(21時までに終える)", "priority": "B", "pillar_label": "筋トレの継続" },
+  { "time_slot": "night", "time_label": "20:30", "name": "夕食を終える", "priority": "B", "pillar_label": "規則正しい生活" },
+  { "time_slot": "night", "time_label": "21:30", "name": "スマホ断ち・間接照明に", "priority": "A", "pillar_label": "規則正しい生活" },
+  { "time_slot": "night", "time_label": "22:00", "name": "シャワー(最後に首〜足元を温める)", "priority": "C", "pillar_label": "規則正しい生活" },
+  { "time_slot": "night", "time_label": "22:15", "name": "明日のToDo・感謝3つを書く", "priority": "A", "pillar_label": "宣言してやり遂げる" },
+  { "time_slot": "night", "time_label": "22:35", "name": "紙の本を読む", "priority": "C", "pillar_label": "学び・成長" },
+  { "time_slot": "night", "time_label": "22:50", "name": "深呼吸・ストレッチ/換気", "priority": "C", "pillar_label": "規則正しい生活" },
+  { "time_slot": "night", "time_label": "23:00", "name": "就寝", "priority": "A", "pillar_label": "規則正しい生活" }
+]
