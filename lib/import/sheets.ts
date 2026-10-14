@@ -178,6 +178,7 @@ export function parseHabits(grid: Grid, warnings: string[]): HabitImport[] {
     const s = t(row[h.idx.slot]);
     if (s && SLOT[s]) slot = SLOT[s];
     const p = t(row[h.idx.priority]).normalize("NFKC").toUpperCase();
+    if (!p) continue; // 「1日の満点」などの行
     if (!["A", "B", "C"].includes(p)) {
       warnings.push(`習慣リスト:「${name}」の優先度「${p}」が A/B/C ではないので飛ばしました。`);
       continue;
@@ -309,6 +310,8 @@ export interface GoalsImport {
   sales: SalesImport[];
 }
 
+const DEFAULT_TARGET = 3_000_000;
+
 export function parseGoals(grid: Grid, warnings: string[]): GoalsImport {
   const out: GoalsImport = {
     final_goal: labeled(grid, /^最終目標/),
@@ -327,6 +330,7 @@ export function parseGoals(grid: Grid, warnings: string[]): GoalsImport {
     for (const row of grid.slice(b.row + 1)) {
       const v = (k: string) => (k in b.idx ? t(row[b.idx[k]]) : "");
       if (isBlankRow(row) || (!v("name") && !v("received"))) break;
+      if (v("name").startsWith("※")) break;
       if (!v("name")) continue;
       out.benefactors.push({ name: v("name"), relation: v("relation"), received: v("received"), plan: v("plan"), progress: v("progress"), next_action: v("next") });
     }
@@ -344,14 +348,18 @@ export function parseGoals(grid: Grid, warnings: string[]): GoalsImport {
       if (isBlankRow(row)) break;
       const month = v("month") ? years.month(v("month")) : null;
       if (!month) continue;
-      out.sales.push({
+      const sale: SalesImport = {
         month,
         target_yen: parseYen(v("target")),
         actual_yen: parseYen(v("actual")),
         went_well: v("well"),
         issues: v("issues"),
         next_actions: v("next"),
-      });
+      };
+      // 実績も振り返りも無く、目標が初期値のままの月(先の月の空行)は取り込まない
+      const empty = sale.actual_yen == null && !sale.went_well && !sale.issues && !sale.next_actions;
+      if (empty && (sale.target_yen == null || sale.target_yen === DEFAULT_TARGET)) continue;
+      out.sales.push(sale);
     }
   }
   if (!out.final_goal && !out.mid_goal && !out.benefactors.length && !out.sales.length)
@@ -470,6 +478,14 @@ export function parsePillars(grid: Grid, warnings: string[]): PillarImport[] {
   return out.filter((p) => Object.entries(p).some(([k, v]) => k !== "name" && v));
 }
 
+/** 習慣の「紐づく柱」がその柱に当たるか。「掃除・身なり」の柱は「掃除」「身なり」も含む */
+export function pillarMatches(pillarName: string, label: string): boolean {
+  const p = normName(pillarName);
+  const l = normName(label);
+  if (!p || !l) return false;
+  return p === l || pillarName.split(/[・、,/]/).some((part) => normName(part) === l);
+}
+
 // ───────── 週次レビュー ─────────
 
 export interface ReviewImport {
@@ -484,9 +500,9 @@ export function parseReviews(grid: Grid, warnings: string[]): ReviewImport[] {
   const h = findHeader(
     grid,
     { week: /^(週|期間|週の始まり|開始日)/, worst: /崩れた/, cause: /原因/, fix: /if/i, rock: /大きな石/ },
-    ["week"],
+    ["week", "worst"],
   );
-  if (!h || Object.keys(h.idx).length < 2) {
+  if (!h) {
     warnings.push("週次レビュー:「週」「一番崩れた習慣」「原因」などの見出しが見つかりませんでした。");
     return [];
   }
@@ -530,9 +546,10 @@ export function parseRewards(grid: Grid, warnings: string[]): RewardsImport {
   for (const row of grid) {
     row.forEach((c, i) => {
       const s = t(c).normalize("NFKC");
-      const m = s.match(/^(\d+)\s*週目/);
+      // 「1週目 自炊」「1週:自炊」の両方
+      const m = s.match(/^(\d+)\s*週目?(?=[\s::]|$)/);
       if (m) {
-        const text = s.replace(/^(\d+)\s*週目[::]?\s*/, "") || t(row.slice(i + 1).find((x) => t(x)));
+        const text = s.replace(/^(\d+)\s*週目?\s*[::]?\s*/, "") || t(row.slice(i + 1).find((x) => t(x)));
         if (text) steps.set(Number(m[1]), text);
       }
       if (/目標達成率|達成率/.test(s) && rate == null) {
@@ -550,12 +567,13 @@ export function parseRewards(grid: Grid, warnings: string[]): RewardsImport {
   // 気分転換リスト:見出しの下に続く行
   const moodBoosters: string[] = [];
   for (let r = 0; r < grid.length; r++) {
-    const c = grid[r].findIndex((x) => /気分転換/.test(x));
+    // 「気分転換」で始まる見出しの下の、同じ列だけを読む
+    const c = grid[r].findIndex((x) => t(x).startsWith("気分転換"));
     if (c < 0) continue;
     for (const row of grid.slice(r + 1)) {
-      const v = t(row[c]) || t(row.find((x) => t(x)));
-      if (!v) break;
-      moodBoosters.push(v);
+      const v = t(row[c]);
+      if (v.startsWith("※")) break;
+      if (v) moodBoosters.push(v);
     }
     break;
   }

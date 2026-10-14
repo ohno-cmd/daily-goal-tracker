@@ -5,7 +5,7 @@ import { useState } from "react";
 import { SalesChart } from "@/components/charts";
 import { AutoText, Card, Loading, MoveButtons, SectionTitle, Stat, btnCls, yen } from "@/components/ui";
 import { addDays, addMonths, formatYm, monthStartOf, type DateStr } from "@/lib/dates";
-import { normName, parseYen } from "@/lib/import/sheets";
+import { parseYen, pillarMatches } from "@/lib/import/sheets";
 import { useRows } from "@/lib/rows";
 import { average, habitRates, isActiveOn, percent, salesRows } from "@/lib/scoring";
 import { useData, useScores } from "@/lib/store";
@@ -213,7 +213,7 @@ function Pillars({ list }: { list: ReturnType<typeof useRows<Pillar>> }) {
       {list.rows.length === 0 && <p className="text-sm text-zinc-400">まだありません。設定のインポートで「ゴール」シートを取り込めます。</p>}
       <div className="grid gap-3 lg:grid-cols-2">
         {list.rows.map((p, i) => {
-          const linked = habits.filter((h) => (h.pillar_id === p.id || (p.name && normName(h.pillar_label) === normName(p.name))) && isActiveOn(defById.get(h.id)!, today));
+          const linked = habits.filter((h) => (h.pillar_id === p.id || pillarMatches(p.name, h.pillar_label)) && isActiveOn(defById.get(h.id)!, today));
           const lr = linked.map((h) => ({ h, r: rates.find((x) => x.habitId === h.id)?.rate ?? null }));
           const avg = average(lr.map((x) => x.r));
           return (

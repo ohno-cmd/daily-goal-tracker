@@ -64,7 +64,9 @@ export function ImportPanel() {
           <li>取り込みたいシートを選び、「ファイル → ダウンロード → カンマ区切り形式(.csv)」</li>
           <li>シートごとに繰り返し、ここでまとめて選ぶ</li>
         </ol>
-        <p className="mt-2">対応:{SHEETS.map((s) => s.label).join("、")}。同じ日付・同じ月・同じ週は上書きします。</p>
+        <p className="mt-2">
+          対応:{SHEETS.map((s) => s.label).join("、")}。同じ日付・同じ月・同じ週は上書きします。ダッシュボードはアプリが計算するので取り込み不要です(「シートを選ぶ」のままのファイルは使いません)。
+        </p>
       </details>
 
       <label className={`${btnCls} w-full cursor-pointer border-dashed`}>

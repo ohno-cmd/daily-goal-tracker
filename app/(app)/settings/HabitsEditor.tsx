@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AutoText, PriorityBadge, btnCls, inputCls, primaryBtnCls } from "@/components/ui";
-import { normName } from "@/lib/import/sheets";
+import { pillarMatches } from "@/lib/import/sheets";
 import type { Priority } from "@/lib/scoring";
 import { useData, type HabitPatch } from "@/lib/store";
 import { TIME_SLOTS, type Habit, type Pillar, type TimeSlot } from "@/lib/types";
@@ -16,7 +16,7 @@ export function HabitsEditor({ pillars, openId }: { pillars: Pillar[]; openId: s
   const archived = habits.filter((h) => h.archived_at);
   const labels = [...new Set([...pillars.map((p) => p.name), ...habits.map((h) => h.pillar_label)].filter(Boolean))];
 
-  const pillarIdFor = (label: string) => pillars.find((p) => normName(p.name) === normName(label))?.id ?? null;
+  const pillarIdFor = (label: string) => pillars.find((p) => pillarMatches(p.name, label))?.id ?? null;
   const save = (h: Habit, patch: HabitPatch) => saveHabit(h.id, patch);
 
   function move(h: Habit, dir: -1 | 1) {

@@ -1,7 +1,7 @@
 // ImportPlan をDBに保存する(ログイン中のユーザーの権限で行うので、自分の行にしか書けない)
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Habit, Pillar, Profile } from "../types";
-import { normName, type ImportPlan } from "./sheets";
+import { normName, pillarMatches, type ImportPlan } from "./sheets";
 
 const CHUNK = 500;
 
@@ -90,7 +90,7 @@ export async function applyPlan(sb: SupabaseClient, plan: ImportPlan, onStep: (s
       const saved = found
         ? (await must(sb.from("pillars").update(fields).eq("id", found.id).select().single(), `柱「${p.name}」`) as Pillar)
         : (await must(sb.from("pillars").insert(fields).select().single(), `柱「${p.name}」`) as Pillar);
-      const linked = habits.filter((h) => normName(h.pillar_label) === normName(p.name));
+      const linked = habits.filter((h) => pillarMatches(p.name, h.pillar_label));
       for (const h of linked) await must(sb.from("habits").update({ pillar_id: saved.id }).eq("id", h.id), "柱の紐づけ");
     }
   }
