@@ -43,5 +43,5 @@ function redirectTo(request: NextRequest, to: string, from?: NextResponse) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icons/|.*\.(?:png|svg|ico|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|manifest.webmanifest|sw.js|icons/|icon.png|apple-icon.png|.*\\.(?:png|svg|ico|webp)$).*)"],
 };
