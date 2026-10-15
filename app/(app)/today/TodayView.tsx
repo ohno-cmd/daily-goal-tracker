@@ -329,8 +329,8 @@ function Ring({ rate }: { rate: number }) {
       <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90" aria-hidden>
         <defs>
           <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f472b6" />
-            <stop offset="100%" stopColor="#a855f7" />
+            <stop offset="0%" style={{ stopColor: "var(--color-pink-400)" }} />
+            <stop offset="100%" style={{ stopColor: "var(--color-purple-500)" }} />
           </linearGradient>
         </defs>
         <circle cx="32" cy="32" r={r} fill="none" strokeWidth="7" className="stroke-pink-100 dark:stroke-purple-950" />

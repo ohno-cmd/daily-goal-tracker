@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useData, usePillarTerm } from "@/lib/store";
+import { useEffect } from "react";
+import { useData, usePillarTerm, useTheme } from "@/lib/store";
 
 type Item = { href: string; label: string; icon: React.ReactNode; mobile: boolean };
 
@@ -60,6 +61,17 @@ function GoalLine() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { title: pillarTitle } = usePillarTerm();
+  const { status } = useData();
+  const theme = useTheme();
+  useEffect(() => {
+    if (status !== "ready") return;
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // 保存できなくても表示はできる
+    }
+  }, [theme, status]);
   const labelOf = (it: Item) => (it.href === "/pillars" ? pillarTitle : it.label);
   return (
     <div className="flex min-h-dvh w-full">

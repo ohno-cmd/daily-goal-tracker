@@ -23,8 +23,66 @@
   --font-sans: var(--font-maru), "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
 }
 
+/* dark: は「OSがダーク」か「かっこいい(cool)テーマ」のとき */
+@custom-variant dark {
+  &:where([data-theme="cool"], [data-theme="cool"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    @slot;
+  }
+}
+
 html {
   color-scheme: light dark;
+}
+
+/* ───────── かっこいい(cool):紺の地に青と水色、角は控えめ、角ばった文字 ───────── */
+[data-theme="cool"] {
+  color-scheme: dark;
+  --background: #070b16;
+  --foreground: #e6edf7;
+  --bg-gradient: radial-gradient(900px 500px at 0% 0%, rgba(14, 165, 233, 0.18) 0%, transparent 60%),
+    radial-gradient(900px 600px at 100% 0%, rgba(37, 99, 235, 0.22) 0%, transparent 55%),
+    linear-gradient(180deg, #0a1020 0%, #05080f 100%);
+
+  /* ピンク → 水色、紫 → 青 */
+  --color-pink-50: oklch(98.4% 0.019 200.873);
+  --color-pink-100: oklch(95.6% 0.045 203.388);
+  --color-pink-200: oklch(91.7% 0.08 205.041);
+  --color-pink-300: oklch(86.5% 0.127 207.078);
+  --color-pink-400: oklch(78.9% 0.154 211.53);
+  --color-pink-500: oklch(71.5% 0.143 215.221);
+  --color-pink-600: oklch(60.9% 0.126 221.723);
+  --color-pink-700: oklch(52% 0.105 223.128);
+  --color-pink-800: oklch(45% 0.085 224.283);
+  --color-pink-900: oklch(39.8% 0.07 227.392);
+  --color-pink-950: oklch(30.2% 0.056 229.695);
+  --color-purple-50: oklch(97% 0.014 254.604);
+  --color-purple-100: oklch(93.2% 0.032 255.585);
+  --color-purple-200: oklch(88.2% 0.059 254.128);
+  --color-purple-300: oklch(80.9% 0.105 251.813);
+  --color-purple-400: oklch(70.7% 0.165 254.624);
+  --color-purple-500: oklch(62.3% 0.214 259.815);
+  --color-purple-600: oklch(54.6% 0.245 262.881);
+  --color-purple-700: oklch(48.8% 0.243 264.376);
+  --color-purple-800: oklch(42.4% 0.199 265.638);
+  --color-purple-900: oklch(37.9% 0.146 265.522);
+  --color-purple-950: oklch(28.2% 0.091 267.935);
+  /* カードの地:灰色 → 紺 */
+  --color-zinc-800: oklch(27.9% 0.041 260.031);
+  --color-zinc-900: oklch(20.8% 0.042 265.755);
+  --color-zinc-950: oklch(12.9% 0.042 264.695);
+
+  /* 角を控えめに */
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.875rem;
+}
+
+[data-theme="cool"] body {
+  font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.01em;
 }
 
 body {

@@ -26,7 +26,8 @@ export function usePartner(): { partner: PartnerInfo | null; loading: boolean } 
       if (!id) return alive && setState({ partner: null, loading: false });
       const { data: p } = await sb.from("profiles").select("username, display_name, started_on").eq("user_id", id).single();
       const prof = p as Pick<Profile, "username" | "display_name" | "started_on"> | null;
-      if (alive) setState({ partner: { id, name: prof?.username || prof?.display_name || "パートナー", startedOn: prof?.started_on ?? "" }, loading: false });
+      const name = prof?.display_name?.trim() || prof?.username?.trim() || "パートナー";
+      if (alive) setState({ partner: { id, name, startedOn: prof?.started_on ?? "" }, loading: false });
     })();
     return () => {
       alive = false;

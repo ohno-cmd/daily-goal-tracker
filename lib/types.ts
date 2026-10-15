@@ -21,6 +21,8 @@ export interface Profile extends Row {
   username: string | null;
   /** 「柱」の呼び方(例:大切な軸) */
   pillar_term: string;
+  /** 見た目(cute:かわいい / cool:かっこいい) */
+  theme: "cute" | "cool";
   final_goal: string;
   mid_goal: string;
   three_month_note: string;

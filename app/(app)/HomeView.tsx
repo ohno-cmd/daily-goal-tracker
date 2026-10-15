@@ -7,7 +7,7 @@ import { Loading, primaryBtnCls, rateColor } from "@/components/ui";
 import { addDays, formatMd, hourInTokyo, weekday, weekStartOf, WEEKDAYS, type DateStr } from "@/lib/dates";
 import { useRows } from "@/lib/rows";
 import { evaluateRewards, isActiveOn, longestStreak, percent, summarizeWeek, weekStarts } from "@/lib/scoring";
-import { useData, usePillarTerm, useScores } from "@/lib/store";
+import { displayNameOf, useData, usePillarTerm, useScores, useTheme } from "@/lib/store";
 import { TIME_SLOTS, type Reward, type TextItem } from "@/lib/types";
 import mascot from "@/public/loading.png";
 
@@ -19,6 +19,7 @@ export function HomeView() {
   const affirmations = useRows<TextItem>("affirmations");
   const [bounce, setBounce] = useState(0);
   const { title: pillarTitle } = usePillarTerm();
+  const theme = useTheme();
 
   const rule = { rate: Number(profile?.reward_rate ?? 0.8), aDays: profile?.reward_a_days ?? 6 };
   const week = useMemo(() => {
@@ -30,7 +31,8 @@ export function HomeView() {
 
   if (status !== "ready") return <Loading error={error} />;
 
-  const name = profile?.username || profile?.display_name || "";
+  const name = displayNameOf(profile);
+  const cool = theme === "cool";
   const hour = hourInTokyo();
   const greeting = hour >= 4 && hour < 10 ? "おはよう" : hour >= 10 && hour < 17 ? "こんにちは" : "こんばんは";
   const r = day(today);
@@ -61,7 +63,7 @@ export function HomeView() {
       {/* あいさつ */}
       <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-pink-300 via-pink-200 to-purple-300 p-5 text-purple-950 shadow-[0_10px_30px_-12px_rgba(219,39,119,0.5)] dark:from-pink-900 dark:via-purple-900 dark:to-purple-950 dark:text-purple-50">
         <span className="absolute -left-4 -top-6 text-7xl opacity-20" aria-hidden>
-          ✿
+          {cool ? "◆" : "✿"}
         </span>
         <span className="absolute bottom-2 left-1/2 text-xl opacity-40" aria-hidden>
           ✦
@@ -79,7 +81,7 @@ export function HomeView() {
                   、<span className="whitespace-nowrap">{name}</span>
                 </>
               )}
-              <span aria-hidden> 🌸</span>
+              <span aria-hidden>{cool ? " ⚡" : " 🌸"}</span>
             </h1>
             <p className="mt-1 text-sm opacity-80">{cheer(r.rate, r.allA, hour, comeback)}</p>
           </div>
@@ -104,7 +106,7 @@ export function HomeView() {
       {week && (
         <Link href="/review" className="block rounded-3xl border border-pink-100 bg-white/85 p-5 shadow-[0_6px_24px_-12px_rgba(219,39,119,0.35)] backdrop-blur transition active:scale-[0.99] dark:border-purple-950 dark:bg-zinc-900/70">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-purple-900/70 dark:text-purple-200/70">💜 今週の達成率</h2>
+            <h2 className="text-sm font-bold text-purple-900/70 dark:text-purple-200/70">{cool ? "💙" : "💜"} 今週の達成率</h2>
             <span className="text-xs text-zinc-400">
               {formatMd(week.summary.weekStart, false)}〜{formatMd(addDays(week.summary.weekStart, 6), false)}
             </span>
@@ -250,8 +252,8 @@ function BigRing({ rate }: { rate: number }) {
       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90" aria-hidden>
         <defs>
           <linearGradient id="week-ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f472b6" />
-            <stop offset="100%" stopColor="#a855f7" />
+            <stop offset="0%" style={{ stopColor: "var(--color-pink-400)" }} />
+            <stop offset="100%" style={{ stopColor: "var(--color-purple-500)" }} />
           </linearGradient>
         </defs>
         <circle cx="50" cy="50" r={r} fill="none" strokeWidth="11" className="stroke-pink-100 dark:stroke-purple-950" />

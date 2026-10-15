@@ -318,6 +318,17 @@ export function toHabitDefs(habits: Habit[], versions: HabitVersion[]): HabitDef
   }));
 }
 
+/** 見た目のテーマ */
+export function useTheme(): "cute" | "cool" {
+  const { profile } = useData();
+  return profile?.theme === "cool" ? "cool" : "cute";
+}
+
+/** 画面に出す名前(表示名 → ログイン用の名前の順) */
+export function displayNameOf(p: { display_name?: string | null; username?: string | null } | null | undefined): string {
+  return p?.display_name?.trim() || p?.username?.trim() || "";
+}
+
 /** 「柱」の呼び方。term は「〇〇別」「紐づく〇〇」に、title は見出しに使う */
 export function usePillarTerm() {
   const { profile } = useData();

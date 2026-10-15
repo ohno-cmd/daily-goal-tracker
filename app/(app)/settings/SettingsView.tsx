@@ -8,7 +8,7 @@ import { WEEKDAYS, weekday } from "@/lib/dates";
 import { toCsv } from "@/lib/import/csv";
 import { useRows } from "@/lib/rows";
 import { percent, priorityOn } from "@/lib/scoring";
-import { useData, usePillarTerm, useScores } from "@/lib/store";
+import { useData, usePillarTerm, useScores, useTheme } from "@/lib/store";
 import { TIME_SLOTS, type Pillar, type Reward, type TextItem } from "@/lib/types";
 import { HabitsEditor } from "./HabitsEditor";
 import { ImportPanel } from "./ImportPanel";
@@ -68,15 +68,55 @@ export function SettingsView() {
       </Card>
       <Card>
         <SectionTitle>アカウント</SectionTitle>
+        <AppearanceSettings />
         <LoginSettings />
         <PillarTermSetting />
         <div className="mt-4 flex items-center justify-between gap-2 text-sm">
           <span className="truncate text-zinc-500">{email}</span>
-          <form action="/auth/signout" method="post">
+          <form
+            action="/auth/signout"
+            method="post"
+            onSubmit={() => {
+              try {
+                localStorage.removeItem("theme");
+              } catch {}
+            }}
+          >
             <button className={btnCls}>ログアウト</button>
           </form>
         </div>
       </Card>
+    </div>
+  );
+}
+
+/** 表示名とデザイン */
+function AppearanceSettings() {
+  const { profile, saveProfile } = useData();
+  const theme = useTheme();
+  const options: ["cute" | "cool", string, string][] = [
+    ["cute", "🌸 かわいい", "from-pink-300 to-purple-400"],
+    ["cool", "⚡ かっこいい", "from-sky-500 to-blue-800"],
+  ];
+  return (
+    <div className="mb-4 space-y-4">
+      <AutoText label="表示名(あいさつなどに出る名前)" value={profile?.display_name ?? ""} onSave={(v) => (v.trim() ? saveProfile({ display_name: v.trim() }) : Promise.resolve(false))} />
+      <div>
+        <div className="mb-1 text-sm font-medium text-purple-900/70 dark:text-purple-200/70">デザイン</div>
+        <div className="grid grid-cols-2 gap-2">
+          {options.map(([value, label, grad]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={theme === value}
+              onClick={() => saveProfile({ theme: value })}
+              className={`min-h-14 rounded-2xl bg-gradient-to-br ${grad} px-3 text-sm font-bold text-white transition active:scale-95 ${theme === value ? "ring-4 ring-purple-300 dark:ring-purple-500" : "opacity-60"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
